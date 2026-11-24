@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import {
   Activity, ArrowUpRight, Bell, CalendarDays, Check, ChevronDown, ChevronLeft,
   ChevronRight, Circle, Clock3, Flame, LayoutDashboard, ListTodo, MoreHorizontal,
@@ -50,7 +50,7 @@ export default function App() {
   function saveHabits(next: Habit[]) { setHabits(next); localStorage.setItem('ff-habits', JSON.stringify(next)) }
   function toggleTask(id: number) { saveTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t)) }
   function toggleHabit(id: number) { saveHabits(habits.map(h => h.id === id ? { ...h, done: !h.done } : h)) }
-  function addTask(e: React.FormEvent) {
+  function addTask(e: FormEvent) {
     e.preventDefault()
     if (!newTask.trim()) return
     saveTasks([...tasks, { id: Date.now(), title: newTask.trim(), time: 'Без времени', done: false, tag: 'Личное' }])
