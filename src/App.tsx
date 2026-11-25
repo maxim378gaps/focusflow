@@ -9,20 +9,10 @@ const todayKey = () => { const d=new Date(); return [d.getFullYear(),String(d.ge
 const shiftDate = (key:string,n:number) => { const d=new Date(key+'T12:00:00'); d.setDate(d.getDate()+n); return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-') }
 const uid=()=>crypto.randomUUID?.() ?? String(Date.now()+Math.random())
 function read<T>(key:string,fallback:T):T { try { const raw=localStorage.getItem('focusflow:'+key); return raw?JSON.parse(raw) as T:fallback } catch { return fallback } }
-const initialTasks:Task[]=[] /* старт без выдуманной статистики */
-/* const initialTasks:Task[]=[
- {id:'t1',title:'Утренняя прогулка',date:todayKey(),time:'09:00',category:'Здоровье',note:'',done:true,completedAt:new Date().toISOString()},
- {id:'t2',title:'Сделать ключевую задачу проекта',date:todayKey(),time:'11:00',category:'Работа',note:'',done:false},
- {id:'t3',title:'Изучить один урок TypeScript',date:todayKey(),time:'14:30',category:'Обучение',note:'',done:false},
- {id:'t4',title:'Подвести итоги дня',date:todayKey(),time:'20:00',category:'Личное',note:'',done:false},
-]
-const initialHabits:Habit[]=[
- {id:'h1',title:'Выпить стакан воды',detail:'Каждое утро',icon:'💧',days:['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],log:[todayKey()]},
- {id:'h2',title:'Прогулка 30 минут',detail:'Движение каждый день',icon:'🚶',days:['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],log:[]},
- {id:'h3',title:'Чтение',detail:'15 минут в день',icon:'📖',days:['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],log:[]},
-]
-const initialPlans:Plan[]=[{id:'p1',title:'Неделя осознанного ритма',description:'Небольшие ежедневные действия без перегруза',start:todayKey(),end:shiftDate(todayKey(),6),category:'Личное'}]
-const initialGoals:Goal[]=[{id:'g1',title:'Запустить собственный продукт',description:'Превратить идею в работающий проект',deadline:shiftDate(todayKey(),90),milestones:['Изучить рынок','Выбрать идею','Создать MVP','Найти первых клиентов','Получить первую выручку'],done:['Изучить рынок']},{id:'g2',title:'Укрепить здоровье',description:'Выстроить устойчивый режим и активность',deadline:shiftDate(todayKey(),60),milestones:['Наладить сон','Добавить прогулки','Сформировать питание','Закрепить режим'],done:[]}]
+const initialTasks:Task[]=[]
+const initialHabits:Habit[]=[]
+const initialPlans:Plan[]=[]
+const initialGoals:Goal[]=[]
 const nav=[{id:'home',label:'Обзор',icon:LayoutDashboard},{id:'plans',label:'Мои планы',icon:CalendarDays},{id:'habits',label:'Привычки',icon:Activity},{id:'goals',label:'Цели',icon:Target},{id:'stats',label:'Статистика',icon:BarChart3}]
 const categories=['Личное','Работа','Здоровье','Обучение','Финансы','Другое']
 const todayLabel=()=>new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',month:'long'}).format(new Date())
