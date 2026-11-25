@@ -66,10 +66,10 @@ export default function App(){
  const monthLabel=new Intl.DateTimeFormat('ru-RU',{month:'long',year:'numeric'}).format(new Date(monthStart+'T12:00:00'))
  const balance=categories.map(category=>{const list=tasks.filter(t=>t.category===category);return {category,value:list.length?Math.round(list.filter(t=>t.done).length/list.length*100):0,count:list.length}})
  const wheelPoints=balance.map((item,index)=>{const angle=-Math.PI/2+index*Math.PI*2/balance.length;const radius=item.value*.8;return `${100+Math.cos(angle)*radius},${100+Math.sin(angle)*radius}`}).join(' ')
+ const weekly=week.map(d=>{const ts=tasks.filter(t=>t.date===d);return {date:d,label:new Intl.DateTimeFormat('ru-RU',{weekday:'short'}).format(new Date(d+'T12:00:00')).replace('.',''),value:ts.length?Math.round(ts.filter(t=>t.done).length/ts.length*100):0,count:ts.filter(t=>t.done).length}})
  const weeklyDone=weekly.reduce((n,d)=>n+d.count,0)
  const weeklyPlanned=tasks.filter(t=>t.date>=week[0]&&t.date<=week[6]).length
  const linkedTasks=(id:string)=>tasks.filter(t=>t.planId===id)
- const weekly=week.map(d=>{const ts=tasks.filter(t=>t.date===d);return {date:d,label:new Intl.DateTimeFormat('ru-RU',{weekday:'short'}).format(new Date(d+'T12:00:00')).replace('.',''),value:ts.length?Math.round(ts.filter(t=>t.done).length/ts.length*100):0,count:ts.filter(t=>t.done).length}})
  const monthTasks=tasks.filter(t=>t.date>=shiftDate(todayKey(),-29)&&t.date<=todayKey())
  const overall=monthTasks.length?Math.round(monthTasks.filter(t=>t.done).length/monthTasks.length*100):0
  const pageTitle=nav.find(n=>n.id===active)?.label??'Обзор'
