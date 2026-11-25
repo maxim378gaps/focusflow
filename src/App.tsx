@@ -1,114 +1,98 @@
-import { useMemo, useState, type FormEvent } from 'react'
-import {
-  Activity, ArrowUpRight, Bell, CalendarDays, Check, ChevronDown,
-  ChevronRight, Circle, Clock3, Flame, LayoutDashboard, MoreHorizontal,
-  Plus, Search, Settings2, Sparkles, Target, TrendingUp, X, Zap
-} from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Activity, ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, Circle, Clock3, Flame, LayoutDashboard, MoreHorizontal, Plus, Search, Settings2, Sparkles, Target, TrendingUp, X, Zap, Pencil, Trash2, RotateCcw, BarChart3, Calendar, CheckCircle2 } from 'lucide-react'
 
-type Task = { id: number; title: string; time: string; done: boolean; tag: string }
-type Habit = { id: number; title: string; detail: string; icon: string; done: boolean }
-
-const initialTasks: Task[] = [
-  { id: 1, title: 'Утренняя прогулка', time: '09:00', done: true, tag: 'Здоровье' },
-  { id: 2, title: 'Сделать ключевую задачу проекта', time: '11:00', done: false, tag: 'Работа' },
-  { id: 3, title: 'Изучить 1 урок TypeScript', time: '14:30', done: false, tag: 'Обучение' },
-  { id: 4, title: 'Подвести итоги дня', time: '20:00', done: false, tag: 'Личное' },
+type Task = { id:string; title:string; date:string; time:string; category:string; note:string; done:boolean; completedAt?:string; reason?:string }
+type Habit = { id:string; title:string; detail:string; icon:string; days:string[]; log:string[] }
+type Plan = { id:string; title:string; description:string; start:string; end:string; category:string }
+type Goal = { id:string; title:string; description:string; deadline:string; milestones:string[]; done:string[] }
+const todayKey = () => { const d=new Date(); return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-') }
+const shiftDate = (key:string,n:number) => { const d=new Date(key+'T12:00:00'); d.setDate(d.getDate()+n); return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-') }
+const uid=()=>crypto.randomUUID?.() ?? String(Date.now()+Math.random())
+function read<T>(key:string,fallback:T):T { try { const raw=localStorage.getItem('focusflow:'+key); return raw?JSON.parse(raw) as T:fallback } catch { return fallback } }
+const initialTasks:Task[]=[
+ {id:'t1',title:'Утренняя прогулка',date:todayKey(),time:'09:00',category:'Здоровье',note:'',done:true,completedAt:new Date().toISOString()},
+ {id:'t2',title:'Сделать ключевую задачу проекта',date:todayKey(),time:'11:00',category:'Работа',note:'',done:false},
+ {id:'t3',title:'Изучить один урок TypeScript',date:todayKey(),time:'14:30',category:'Обучение',note:'',done:false},
+ {id:'t4',title:'Подвести итоги дня',date:todayKey(),time:'20:00',category:'Личное',note:'',done:false},
 ]
-const initialHabits: Habit[] = [
-  { id: 1, title: 'Выпить стакан воды', detail: 'Каждое утро', icon: '💧', done: true },
-  { id: 2, title: 'Прогулка 30 минут', detail: 'Движение каждый день', icon: '🚶', done: false },
-  { id: 3, title: 'Чтение', detail: '15 минут в день', icon: '📖', done: false },
+const initialHabits:Habit[]=[
+ {id:'h1',title:'Выпить стакан воды',detail:'Каждое утро',icon:'💧',days:['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],log:[todayKey()]},
+ {id:'h2',title:'Прогулка 30 минут',detail:'Движение каждый день',icon:'🚶',days:['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],log:[]},
+ {id:'h3',title:'Чтение',detail:'15 минут в день',icon:'📖',days:['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],log:[]},
 ]
-
-const nav = [
-  { id: 'home', label: 'Обзор', icon: LayoutDashboard },
-  { id: 'plans', label: 'Мои планы', icon: CalendarDays },
-  { id: 'habits', label: 'Привычки', icon: Activity },
-  { id: 'goals', label: 'Цели', icon: Target },
-]
-
-function readStorage<T>(key: string, fallback: T): T {
-  try {
-    const value = localStorage.getItem(key)
-    return value ? JSON.parse(value) as T : fallback
-  } catch { return fallback }
-}
-
-export default function App() {
-  const [active, setActive] = useState('home')
-  const [tasks, setTasks] = useState<Task[]>(() => readStorage('ff-tasks', initialTasks))
-  const [habits, setHabits] = useState<Habit[]>(() => readStorage('ff-habits', initialHabits))
-  const [showTaskForm, setShowTaskForm] = useState(false)
-  const [newTask, setNewTask] = useState('')
-  const [search, setSearch] = useState('')
-  const [toast, setToast] = useState('')
-  const completed = tasks.filter(t => t.done).length
-  const progress = Math.round(completed / tasks.length * 100) || 0
-  const dateLabel = useMemo(() => new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()), [])
-
-  function saveTasks(next: Task[]) { setTasks(next); localStorage.setItem('ff-tasks', JSON.stringify(next)) }
-  function saveHabits(next: Habit[]) { setHabits(next); localStorage.setItem('ff-habits', JSON.stringify(next)) }
-  function toggleTask(id: number) { saveTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t)) }
-  function toggleHabit(id: number) { saveHabits(habits.map(h => h.id === id ? { ...h, done: !h.done } : h)) }
-  function addTask(e: FormEvent) {
-    e.preventDefault()
-    if (!newTask.trim()) return
-    saveTasks([...tasks, { id: Date.now(), title: newTask.trim(), time: 'Без времени', done: false, tag: 'Личное' }])
-    setNewTask(''); setShowTaskForm(false)
-  }
-  const filteredTasks = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
-
-  return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><div className="brand-mark"><Sparkles size={19} /></div><span>focus<span className="brand-light">flow</span></span></div>
-        <div className="workspace"><div className="workspace-avatar">M</div><div><strong>Моё пространство</strong><small>Личный аккаунт</small></div><ChevronDown size={15} /></div>
-        <div className="nav-caption">РАБОЧЕЕ ПРОСТРАНСТВО</div>
-        <nav>{nav.map(item => { const Icon = item.icon; return <button key={item.id} className={active === item.id ? 'nav-item active' : 'nav-item'} onClick={() => setActive(item.id)}><Icon size={18} /><span>{item.label}</span>{item.id === 'plans' && <span className="nav-count">3</span>}</button> })}</nav>
-        <div className="sidebar-bottom">
-          <div className="upgrade-card"><div className="upgrade-icon"><Zap size={17} /></div><strong>Твой ритм — твои правила</strong><p>Маленькие шаги складываются в большие изменения.</p><div className="upgrade-line"><span /></div><small>Продолжай в своём темпе</small></div>
-          <button className="nav-item"><Settings2 size={18} /><span>Настройки</span></button>
-          <div className="profile"><div className="profile-avatar">M</div><div><strong>Мой профиль</strong><small>Бесплатный план</small></div><MoreHorizontal size={19} /></div>
-        </div>
-      </aside>
-
-      <main className="main-area">
-        <header className="topbar"><div className="breadcrumb">Моё пространство <ChevronRight size={14} /> <span>{nav.find(n => n.id === active)?.label ?? 'Обзор'}</span></div><div className="top-actions"><div className="searchbox"><Search size={16} /><input placeholder="Поиск задач..." value={search} onChange={e => setSearch(e.target.value)} /></div><button className="icon-button" aria-label="Уведомления"><Bell size={18} /><i /></button><div className="top-avatar">M</div></div></header>
-        <div className="page-content">
-          <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-dot" /> ТВОЁ ПРОСТРАНСТВО ДЛЯ РОСТА</div><h1>{active === 'home' ? 'Хороший день для движения вперёд.' : nav.find(n => n.id === active)?.label}</h1><p className="subheading">{dateLabel} · Не нужно делать всё. Достаточно сделать следующий шаг.</p></div><button className="primary-button" onClick={() => setShowTaskForm(true)}><Plus size={17} /> Новая задача</button></section>
-
-          {active === 'home' && <>
-            <section className="stats-grid">
-              <div className="stat-card progress-stat"><div className="stat-top"><span>Прогресс дня</span><span className="stat-icon purple"><TrendingUp size={17} /></span></div><div className="stat-number">{progress}<small>%</small></div><div className="progress-track"><span style={{ width: progress + '%' }} /></div><div className="stat-foot"><span>{completed} из {tasks.length} задач выполнено</span><span className="positive">Так держать</span></div></div>
-              <div className="stat-card"><div className="stat-top"><span>Активные цели</span><span className="stat-icon blue"><Target size={17} /></span></div><div className="stat-number">3</div><div className="stat-foot"><span>В работе сейчас</span><span className="muted">На этой неделе</span></div></div>
-              <div className="stat-card"><div className="stat-top"><span>Серия привычек</span><span className="stat-icon orange"><Flame size={17} /></span></div><div className="stat-number">4 <small>дня</small></div><div className="stat-foot"><span>Ты формируешь ритм</span><span className="positive">+1 день</span></div></div>
-            </section>
-
-            <section className="content-grid">
-              <div className="panel tasks-panel"><div className="panel-heading"><div><h2>План на сегодня</h2><p>Твой фокус на этот день</p></div><button className="text-button" onClick={() => setActive('plans')}>Все задачи <ArrowUpRight size={15} /></button></div>
-                <div className="task-list">{filteredTasks.map(task => <div className={task.done ? 'task-row task-done' : 'task-row'} key={task.id}><button className={task.done ? 'check-circle checked' : 'check-circle'} onClick={() => toggleTask(task.id)} aria-label="Отметить задачу">{task.done && <Check size={14} />}</button><div className="task-copy"><strong>{task.title}</strong><div className="task-meta"><Clock3 size={12} /> {task.time}<span className="tag">{task.tag}</span></div></div><button className="more-button" aria-label="Дополнительно"><MoreHorizontal size={18} /></button></div>)}
-                {filteredTasks.length === 0 && <div className="empty-state">Ничего не найдено. Попробуй другой запрос.</div>}</div>
-                <button className="add-inline" onClick={() => setShowTaskForm(true)}><Plus size={16} /> Добавить задачу</button>
-              </div>
-              <div className="panel habits-panel"><div className="panel-heading"><div><h2>Ежедневные привычки</h2><p>Регулярность важнее идеала</p></div><button className="more-button"><MoreHorizontal size={19} /></button></div>
-                <div className="habit-progress"><div className="habit-progress-copy"><strong>{habits.filter(h => h.done).length} из {habits.length}</strong><span>выполнено сегодня</span></div><div className="mini-progress"><span style={{ width: (habits.filter(h => h.done).length / habits.length * 100 || 0) + '%' }} /></div></div>
-                <div className="habit-list">{habits.map(h => <button className={h.done ? 'habit-row habit-complete' : 'habit-row'} key={h.id} onClick={() => toggleHabit(h.id)}><span className="habit-emoji">{h.icon}</span><span className="habit-copy"><strong>{h.title}</strong><small>{h.detail}</small></span><span className={h.done ? 'habit-check done' : 'habit-check'}>{h.done && <Check size={13} />}</span></button>)}</div>
-                <button className="add-inline" onClick={() => setActive('habits')}><Plus size={16} /> Управлять привычками</button>
-              </div>
-            </section>
-
-            <section className="bottom-grid"><div className="panel focus-panel"><div className="focus-symbol"><Sparkles size={19} /></div><div><span className="focus-label">МЫСЛЬ ДНЯ</span><h3>Не стремись к идеальному дню. Создай день, который можешь повторить.</h3><p>Устойчивый прогресс начинается с реалистичных обещаний себе.</p></div></div><div className="panel week-panel"><div className="panel-heading"><div><h2>Эта неделя</h2><p>Твой небольшой обзор</p></div><button className="more-button"><MoreHorizontal size={19} /></button></div><div className="week-days">{['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'].map((d,i)=><div className="day-column" key={d}><span>{d}</span><div className={i < 3 ? 'day-dot filled' : i === 3 ? 'day-dot today' : 'day-dot'}>{i < 3 && <Check size={12} />}{i === 3 && <Circle size={7} fill="currentColor" />}</div></div>)}</div><div className="week-caption"><span className="legend-dot" /> 3 активных дня <span className="week-percent">Хороший темп</span></div></div></section>
-          </>}
-
-          {active === 'plans' && <section className="panel standalone-panel"><div className="panel-heading"><div><h2>Все задачи</h2><p>Список твоих ближайших действий</p></div><button className="primary-button small" onClick={() => setShowTaskForm(true)}><Plus size={16} /> Добавить</button></div>{tasks.map(t=><div className="task-row" key={t.id}><button className={t.done?'check-circle checked':'check-circle'} onClick={()=>toggleTask(t.id)}>{t.done&&<Check size={14}/>}</button><div className="task-copy"><strong>{t.title}</strong><div className="task-meta">{t.time}<span className="tag">{t.tag}</span></div></div></div>)}</section>}
-          {active === 'habits' && <section className="panel standalone-panel"><div className="panel-heading"><div><h2>Твои привычки</h2><p>Отмечай маленькие победы каждый день</p></div></div>{habits.map(h=><button className="habit-row expanded" key={h.id} onClick={()=>toggleHabit(h.id)}><span className="habit-emoji">{h.icon}</span><span className="habit-copy"><strong>{h.title}</strong><small>{h.detail}</small></span><span className={h.done?'habit-check done':'habit-check'}>{h.done&&<Check size={13}/>}</span></button>)}</section>}
-          {active === 'goals' && <section className="goal-grid"><div className="panel goal-card"><span className="goal-icon purple"><Target size={20}/></span><span className="goal-status">В ПРОЦЕССЕ</span><h2>Запустить свой продукт</h2><p>Превратить идею в работающий проект</p><div className="progress-track"><span style={{width:'35%'}}/></div><div className="goal-foot"><span>2 из 6 этапов</span><span>35%</span></div></div><div className="panel goal-card"><span className="goal-icon blue"><Activity size={20}/></span><span className="goal-status">В ПРОЦЕССЕ</span><h2>Укрепить здоровье</h2><p>Выстроить устойчивый режим и активность</p><div className="progress-track"><span style={{width:'20%'}}/></div><div className="goal-foot"><span>1 из 5 этапов</span><span>20%</span></div></div><button className="create-goal" onClick={()=>{setToast('Создание целей скоро появится');setTimeout(()=>setToast(''),2500)}}><Plus size={20}/><strong>Создать новую цель</strong><span>Большие изменения начинаются с идеи</span></button></section>}
-          <footer className="footer-note"><span>focusflow</span><span>Двигайся в своём ритме <span className="footer-heart">✦</span></span></footer>
-        </div>
-      </main>
-
-      {showTaskForm && <div className="modal-backdrop" onClick={()=>setShowTaskForm(false)}><form className="task-modal" onSubmit={addTask} onClick={e=>e.stopPropagation()}><div className="modal-head"><div><span className="eyebrow">НОВОЕ ДЕЙСТВИЕ</span><h2>Добавить задачу</h2></div><button type="button" className="icon-button" onClick={()=>setShowTaskForm(false)}><X size={18}/></button></div><label htmlFor="task-title">Что нужно сделать?</label><input id="task-title" autoFocus placeholder="Например, пройтись 20 минут" value={newTask} onChange={e=>setNewTask(e.target.value)}/><div className="modal-actions"><button type="button" className="secondary-button" onClick={()=>setShowTaskForm(false)}>Отмена</button><button type="submit" className="primary-button" disabled={!newTask.trim()}><Plus size={16}/> Создать задачу</button></div></form></div>}
-      {toast && <div className="toast">{toast}</div>}
-    </div>
-  )
+const initialPlans:Plan[]=[{id:'p1',title:'Неделя осознанного ритма',description:'Небольшие ежедневные действия без перегруза',start:todayKey(),end:shiftDate(todayKey(),6),category:'Личное'}]
+const initialGoals:Goal[]=[{id:'g1',title:'Запустить собственный продукт',description:'Превратить идею в работающий проект',deadline:shiftDate(todayKey(),90),milestones:['Изучить рынок','Выбрать идею','Создать MVP','Найти первых клиентов','Получить первую выручку'],done:['Изучить рынок']},{id:'g2',title:'Укрепить здоровье',description:'Выстроить устойчивый режим и активность',deadline:shiftDate(todayKey(),60),milestones:['Наладить сон','Добавить прогулки','Сформировать питание','Закрепить режим'],done:[]}]
+const nav=[{id:'home',label:'Обзор',icon:LayoutDashboard},{id:'plans',label:'Мои планы',icon:CalendarDays},{id:'habits',label:'Привычки',icon:Activity},{id:'goals',label:'Цели',icon:Target},{id:'stats',label:'Статистика',icon:BarChart3}]
+const categories=['Личное','Работа','Здоровье','Обучение','Финансы','Другое']
+const todayLabel=()=>new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',month:'long'}).format(new Date())
+export default function App(){
+ const [active,setActive]=useState('home')
+ const [tasks,setTasks]=useState<Task[]>(()=>read('tasks',initialTasks))
+ const [habits,setHabits]=useState<Habit[]>(()=>read('habits',initialHabits))
+ const [plans,setPlans]=useState<Plan[]>(()=>read('plans',initialPlans))
+ const [goals,setGoals]=useState<Goal[]>(()=>read('goals',initialGoals))
+ const [selectedDate,setSelectedDate]=useState(todayKey())
+ const [modal,setModal]=useState<'task'|'habit'|'plan'|'goal'|null>(null)
+ const [editing,setEditing]=useState<Task|null>(null)
+ const [draft,setDraft]=useState({title:'',date:todayKey(),time:'',category:'Личное',note:''})
+ const [habitDraft,setHabitDraft]=useState({title:'',detail:'Каждый день',icon:'✨'})
+ const [planDraft,setPlanDraft]=useState({title:'',description:'',start:todayKey(),end:shiftDate(todayKey(),6),category:'Личное'})
+ const [goalDraft,setGoalDraft]=useState({title:'',description:'',deadline:shiftDate(todayKey(),30)})
+ const [search,setSearch]=useState('')
+ const [showDone,setShowDone]=useState(false)
+ const [toast,setToast]=useState('')
+ const [exiting,setExiting]=useState<string[]>([])
+ const [reasonTask,setReasonTask]=useState<Task|null>(null)
+ const [reason,setReason]=useState('')
+ useEffect(()=>{localStorage.setItem('focusflow:tasks',JSON.stringify(tasks))},[tasks])
+ useEffect(()=>{localStorage.setItem('focusflow:habits',JSON.stringify(habits))},[habits])
+ useEffect(()=>{localStorage.setItem('focusflow:plans',JSON.stringify(plans))},[plans])
+ useEffect(()=>{localStorage.setItem('focusflow:goals',JSON.stringify(goals))},[goals])
+ const dayTasks=tasks.filter(t=>t.date===selectedDate)
+ const completed=dayTasks.filter(t=>t.done).length
+ const progress=dayTasks.length?Math.round(completed/dayTasks.length*100):0
+ const activeTasks=dayTasks.filter(t=>!t.done&&!exiting.includes(t.id)).filter(t=>t.title.toLowerCase().includes(search.toLowerCase()))
+ const doneTasks=dayTasks.filter(t=>t.done)
+ const doneHabits=habits.filter(h=>h.log.includes(selectedDate)).length
+ const dateTitle=selectedDate===todayKey()?'Сегодня':new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long'}).format(new Date(selectedDate+'T12:00:00'))
+ function notify(message:string){setToast(message);window.setTimeout(()=>setToast(''),2400)}
+ function toggleTask(task:Task){if(task.done){setTasks(v=>v.map(t=>t.id===task.id?{...t,done:false,completedAt:undefined}:t));notify('Задача возвращена в план');return}
+   setExiting(v=>[...v,task.id]);window.setTimeout(()=>{setTasks(v=>v.map(t=>t.id===task.id?{...t,done:true,completedAt:new Date().toISOString()}:t));setExiting(v=>v.filter(id=>id!==task.id));notify('Отлично! Ещё один шаг сделан ✨')},360)
+ }
+ function openTask(task?:Task){setEditing(task??null);setDraft(task?{title:task.title,date:task.date,time:task.time==='Без времени'?'':task.time,category:task.category,note:task.note}:{title:'',date:selectedDate,time:'',category:'Личное',note:''});setModal('task')}
+ function saveTask(e:FormEvent){e.preventDefault();if(!draft.title.trim())return;if(editing)setTasks(v=>v.map(t=>t.id===editing.id?{...t,...draft,title:draft.title.trim()}:t));else setTasks(v=>[...v,{id:uid(),...draft,title:draft.title.trim(),time:draft.time||'Без времени',done:false}]);setModal(null);setEditing(null);notify(editing?'Изменения сохранены':'Задача добавлена в план')}
+ function removeTask(id:string){setTasks(v=>v.filter(t=>t.id!==id));notify('Задача удалена')}
+ function toggleHabit(h:Habit){setHabits(v=>v.map(x=>x.id===h.id?{...x,log:x.log.includes(selectedDate)?x.log.filter(d=>d!==selectedDate):[...x.log,selectedDate]}:x))}
+ function addHabit(e:FormEvent){e.preventDefault();if(!habitDraft.title.trim())return;setHabits(v=>[...v,{id:uid(),...habitDraft,days:['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],log:[]}]);setModal(null);setHabitDraft({title:'',detail:'Каждый день',icon:'✨'});notify('Привычка создана')}
+ function addPlan(e:FormEvent){e.preventDefault();if(!planDraft.title.trim())return;setPlans(v=>[...v,{id:uid(),...planDraft}]);setModal(null);setPlanDraft({title:'',description:'',start:todayKey(),end:shiftDate(todayKey(),6),category:'Личное'});notify('План создан')}
+ function addGoal(e:FormEvent){e.preventDefault();if(!goalDraft.title.trim())return;setGoals(v=>[...v,{id:uid(),...goalDraft,milestones:[],done:[]}]);setModal(null);setGoalDraft({title:'',description:'',deadline:shiftDate(todayKey(),30)});notify('Цель создана')}
+ function saveReason(e:FormEvent){e.preventDefault();if(!reasonTask)return;setTasks(v=>v.map(t=>t.id===reasonTask.id?{...t,reason}:t));setReasonTask(null);setReason('');notify('Причина сохранена — это поможет настроить план')}
+ const week=Array.from({length:7},(_,i)=>shiftDate(todayKey(),i-3))
+ const weekly=week.map(d=>{const ts=tasks.filter(t=>t.date===d);return {date:d,label:new Intl.DateTimeFormat('ru-RU',{weekday:'short'}).format(new Date(d+'T12:00:00')).replace('.',''),value:ts.length?Math.round(ts.filter(t=>t.done).length/ts.length*100):0,count:ts.filter(t=>t.done).length}})
+ const monthTasks=tasks.filter(t=>t.date>=shiftDate(todayKey(),-29)&&t.date<=todayKey())
+ const overall=monthTasks.length?Math.round(monthTasks.filter(t=>t.done).length/monthTasks.length*100):0
+ const pageTitle=nav.find(n=>n.id===active)?.label??'Обзор'
+ return <div className="app-shell">
+  <aside className="sidebar"><div className="brand"><div className="brand-mark"><Sparkles size={19}/></div><span>focus<span className="brand-light">flow</span></span></div><div className="workspace"><div className="workspace-avatar">F</div><div><strong>Моё пространство</strong><small>Личный аккаунт</small></div></div><div className="nav-caption">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav>{nav.map(item=>{const Icon=item.icon;return <button key={item.id} className={active===item.id?'nav-item active':'nav-item'} onClick={()=>setActive(item.id)}><Icon size={18}/><span>{item.label}</span></button>})}</nav><div className="sidebar-bottom"><div className="upgrade-card"><div className="upgrade-icon"><Zap size={17}/></div><strong>Твой ритм — твои правила</strong><p>Маленькие шаги складываются в большие изменения.</p><small>Продолжай в своём темпе</small></div><button className="nav-item" onClick={()=>notify('Настройки профиля добавим следующим этапом')}><Settings2 size={18}/><span>Настройки</span></button><div className="profile"><div className="profile-avatar">F</div><div><strong>Мой профиль</strong><small>Личное пространство</small></div></div></div></aside>
+  <main className="main-area"><header className="topbar"><div className="breadcrumb">Моё пространство <ChevronRight size={14}/><span>{pageTitle}</span></div><div className="top-actions"><div className="searchbox"><Search size={16}/><input placeholder="Поиск задач..." value={search} onChange={e=>setSearch(e.target.value)}/></div><button className="icon-button" aria-label="Уведомления" onClick={()=>notify('Напоминания появятся в следующем этапе')}><Bell size={18}/></button><div className="top-avatar">F</div></div></header>
+   <div className="page-content"><section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-dot"/> ТВОЁ ПРОСТРАНСТВО ДЛЯ РОСТА</div><h1>{active==='home'?'Хороший день для движения вперёд.':pageTitle}</h1><p className="subheading">{todayLabel()} · Не нужно делать всё. Достаточно сделать следующий шаг.</p></div><button className="primary-button" onClick={()=>openTask()}><Plus size={17}/> Новая задача</button></section>
+   {active==='home'&&<><section className="stats-grid"><div className="stat-card progress-stat"><div className="stat-top"><span>Продуктивность · {dateTitle.toLowerCase()}</span><span className="stat-icon purple"><TrendingUp size={17}/></span></div><div className="productivity-line"><div className="stat-number">{progress}<small>%</small></div><div className="productivity-ring" style={{background:'conic-gradient(#a58cff '+progress+'%, #302d3b 0)'}}><div>{completed}<small>/{dayTasks.length}</small></div></div></div><div className="progress-track"><span style={{width:progress+'%'}}/></div><div className="stat-foot"><span>{completed} из {dayTasks.length} задач выполнено</span><span className="positive">{progress===100&&dayTasks.length?'День закрыт ✨':progress>=50?'Хороший темп':'Каждый шаг считается'}</span></div></div><div className="stat-card"><div className="stat-top"><span>Активные цели</span><span className="stat-icon blue"><Target size={17}/></span></div><div className="stat-number">{goals.length}</div><div className="stat-foot"><span>Твои направления роста</span><span className="muted">Всего</span></div></div><div className="stat-card"><div className="stat-top"><span>Привычки сегодня</span><span className="stat-icon orange"><Flame size={17}/></span></div><div className="stat-number">{doneHabits}<small>/{habits.length}</small></div><div className="stat-foot"><span>Отмечено сегодня</span><span className="positive">Без гонки</span></div></div></section>
+    <section className="content-grid"><div className="panel tasks-panel"><div className="panel-heading"><div><h2>План на день</h2><p>Твой фокус на этот день</p></div><button className="text-button" onClick={()=>setActive('plans')}>Все планы <ArrowUpRight size={15}/></button></div><div className="date-strip">{[-1,0,1,2,3].map(n=>{const d=shiftDate(selectedDate,n);return <button key={d} className={selectedDate===d?'date-chip selected':'date-chip'} onClick={()=>setSelectedDate(d)}><span>{new Intl.DateTimeFormat('ru-RU',{weekday:'short'}).format(new Date(d+'T12:00:00')).replace('.','')}</span><strong>{d.slice(-2)}</strong></button>})}<button className="date-today" onClick={()=>setSelectedDate(todayKey())}>Сегодня</button></div><div className="task-list">{activeTasks.map(task=><div className={exiting.includes(task.id)?'task-row task-exiting':'task-row'} key={task.id}><button className="check-circle" onClick={()=>toggleTask(task)} aria-label="Выполнить задачу"/><div className="task-copy"><strong>{task.title}</strong><div className="task-meta"><Clock3 size={12}/>{task.time}<span className="tag">{task.category}</span></div></div><button className="more-button" onClick={()=>openTask(task)} aria-label="Редактировать"><Pencil size={15}/></button></div>)}{activeTasks.length===0&&<div className="empty-state">{search?'Ничего не найдено.':'Все задачи на этот день выполнены. Можно выдохнуть ✨'}</div>}</div><div className="task-panel-footer"><button className="add-inline" onClick={()=>openTask()}><Plus size={16}/> Добавить задачу</button><button className="completed-toggle" onClick={()=>setShowDone(v=>!v)}><CheckCircle2 size={14}/> Выполнено ({doneTasks.length}) <ChevronRight size={14} className={showDone?'rotate':''}/></button></div>{showDone&&<div className="completed-list">{doneTasks.map(t=><div className="completed-row" key={t.id}><button className="check-circle checked" onClick={()=>toggleTask(t)}><Check size={13}/></button><span>{t.title}</span><button className="undo-button" onClick={()=>toggleTask(t)}><RotateCcw size={13}/> Вернуть</button><button className="more-button" onClick={()=>{setReasonTask(t);setReason(t.reason??'')}} title="Причина/заметка"><Pencil size={13}/></button></div>)}</div>}</div>
+     <div className="panel habits-panel"><div className="panel-heading"><div><h2>Ежедневные привычки</h2><p>Регулярность важнее идеала</p></div><button className="more-button" onClick={()=>setModal('habit')}><Plus size={18}/></button></div><div className="habit-progress"><div className="habit-progress-copy"><strong>{doneHabits} из {habits.length}</strong><span>выполнено</span></div><div className="mini-progress"><span style={{width:(habits.length?doneHabits/habits.length*100:0)+'%'}}/></div></div><div className="habit-list">{habits.slice(0,5).map(h=><button className={h.log.includes(selectedDate)?'habit-row habit-complete':'habit-row'} key={h.id} onClick={()=>toggleHabit(h)}><span className="habit-emoji">{h.icon}</span><span className="habit-copy"><strong>{h.title}</strong><small>{h.detail}</small></span><span className={h.log.includes(selectedDate)?'habit-check done':'habit-check'}>{h.log.includes(selectedDate)&&<Check size={13}/>}</span></button>)}</div><button className="add-inline" onClick={()=>setActive('habits')}><Plus size={16}/> Управлять привычками</button></div></section>
+    <section className="bottom-grid"><div className="panel focus-panel"><div className="focus-symbol"><Sparkles size={19}/></div><div><span className="focus-label">ПРИНЦИП FOCUSFLOW</span><h3>Не стремись к идеальному дню. Создай день, который можешь повторить.</h3><p>Пропуск — это информация, а не провал. Продолжай с ближайшего шага.</p></div></div><div className="panel week-panel"><div className="panel-heading"><div><h2>Ритм недели</h2><p>Фактическое выполнение задач</p></div><button className="text-button" onClick={()=>setActive('stats')}>Аналитика <ArrowUpRight size={14}/></button></div><div className="week-days">{weekly.map(d=><div className="day-column" key={d.date}><span>{d.label}</span><div className={d.date===todayKey()?'day-dot today':d.value>0?'day-dot filled':'day-dot'} title={d.value+'%'}>{d.value>0?<span className="day-value">{d.value}</span>:<Circle size={6}/>}</div></div>)}</div><div className="week-caption"><span className="legend-dot"/> Процент выполнения по дням <span className="week-percent">{overall}% за 30 дней</span></div></div></section></>}
+   {active==='plans'&&<section className="panel standalone-panel"><div className="panel-heading"><div><h2>Твои планы</h2><p>Периоды и направления, которые ты выбрал</p></div><button className="primary-button small" onClick={()=>setModal('plan')}><Plus size={16}/> Новый план</button></div>{plans.map(p=><div className="plan-row" key={p.id}><div className="plan-icon"><Calendar size={18}/></div><div className="plan-copy"><strong>{p.title}</strong><p>{p.description||'Без описания'} · {p.category}</p><small>{p.start} — {p.end}</small></div><button className="more-button" onClick={()=>{if(confirm('Удалить этот план?'))setPlans(v=>v.filter(x=>x.id!==p.id))}}><Trash2 size={15}/></button></div>)}{!plans.length&&<div className="empty-state">Создай первый план — на день, неделю или любой срок.</div>}<div className="section-subhead"><h3>Задачи по датам</h3><p>Выбери день, чтобы посмотреть и изменить его план</p></div><div className="task-list">{tasks.filter(t=>t.title.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>a.date.localeCompare(b.date)).map(t=><div className="task-row" key={t.id}><button className={t.done?'check-circle checked':'check-circle'} onClick={()=>toggleTask(t)}>{t.done&&<Check size={13}/>}</button><div className="task-copy"><strong>{t.title}</strong><div className="task-meta">{t.date} · {t.time}<span className="tag">{t.category}</span></div></div><button className="more-button" onClick={()=>openTask(t)}><Pencil size={14}/></button><button className="more-button" onClick={()=>removeTask(t.id)}><Trash2 size={14}/></button></div>)}</div></section>}
+   {active==='habits'&&<section className="panel standalone-panel"><div className="panel-heading"><div><h2>Привычки</h2><p>История отметок хранится по каждому дню</p></div><button className="primary-button small" onClick={()=>setModal('habit')}><Plus size={16}/> Новая привычка</button></div>{habits.map(h=><div className="habit-management" key={h.id}><button className="habit-row expanded" onClick={()=>toggleHabit(h)}><span className="habit-emoji">{h.icon}</span><span className="habit-copy"><strong>{h.title}</strong><small>{h.detail} · {h.log.length} отметок</small></span><span className={h.log.includes(selectedDate)?'habit-check done':'habit-check'}>{h.log.includes(selectedDate)&&<Check size={13}/>}</span></button><div className="habit-history">{Array.from({length:14},(_,i)=>shiftDate(todayKey(),i-13)).map(d=><span key={d} title={d} className={h.log.includes(d)?'history-cell hit':'history-cell'}/>)}</div><button className="delete-link" onClick={()=>{if(confirm('Удалить привычку?'))setHabits(v=>v.filter(x=>x.id!==h.id))}}>Удалить привычку</button></div>)}</section>}
+   {active==='goals'&&<><div className="goal-grid">{goals.map(g=>{const pct=g.milestones.length?Math.round(g.done.length/g.milestones.length*100):0;return <div className="panel goal-card" key={g.id}><span className="goal-icon purple"><Target size={20}/></span><span className="goal-status">ТВОЯ ЦЕЛЬ</span><h2>{g.title}</h2><p>{g.description}</p><div className="progress-track"><span style={{width:pct+'%'}}/></div><div className="goal-foot"><span>{g.done.length} из {g.milestones.length} этапов</span><span>{pct}%</span></div><div className="milestone-list">{g.milestones.map(m=><label key={m}><input type="checkbox" checked={g.done.includes(m)} onChange={()=>setGoals(v=>v.map(x=>x.id===g.id?{...x,done:x.done.includes(m)?x.done.filter(a=>a!==m):[...x.done,m]}:x))}/>{m}</label>)}</div><small className="deadline">Срок: {g.deadline}</small><button className="delete-link" onClick={()=>{if(confirm('Удалить цель?'))setGoals(v=>v.filter(x=>x.id!==g.id))}}>Удалить цель</button></div>})}<button className="create-goal" onClick={()=>setModal('goal')}><Plus size={20}/><strong>Создать новую цель</strong><span>Разбей большое на небольшие этапы</span></button></div></>}
+   {active==='stats'&&<><section className="stats-grid"><div className="stat-card"><div className="stat-top">Выполнение за 30 дней</div><div className="stat-number">{overall}<small>%</small></div><div className="stat-foot"><span>{monthTasks.filter(t=>t.done).length} выполнено из {monthTasks.length}</span></div></div><div className="stat-card"><div className="stat-top">Выполнено всего</div><div className="stat-number">{tasks.filter(t=>t.done).length}</div><div className="stat-foot"><span>Сохранённые результаты</span></div></div><div className="stat-card"><div className="stat-top">Привычки отмечены</div><div className="stat-number">{habits.reduce((n,h)=>n+h.log.length,0)}</div><div className="stat-foot"><span>Все отметки за период</span></div></div></section><div className="panel standalone-panel"><div className="panel-heading"><div><h2>Динамика за неделю</h2><p>Процент выполненных задач в каждый день</p></div></div><div className="chart-bars">{weekly.map(d=><div className="chart-col" key={d.date}><strong>{d.value}%</strong><div className="chart-track"><span style={{height:d.value+'%'}}/></div><small>{d.label}</small></div>)}</div><div className="section-subhead"><h3>По категориям</h3><p>Доля выполненных задач, сгруппированная по категории</p></div>{categories.filter(c=>tasks.some(t=>t.category===c)).map(c=>{const list=tasks.filter(t=>t.category===c);const pct=Math.round(list.filter(t=>t.done).length/list.length*100);return <div className="category-stat" key={c}><div><span>{c}</span><strong>{pct}%</strong></div><div className="progress-track"><span style={{width:pct+'%'}}/></div></div>})}</div></>}
+   <footer className="footer-note"><span>focusflow</span><span>Двигайся в своём ритме ✦</span></footer>
+   </div></main>
+  {modal&&<div className="modal-backdrop" onClick={()=>setModal(null)}><form className="task-modal" onSubmit={modal==='task'?saveTask:modal==='habit'?addHabit:modal==='plan'?addPlan:addGoal} onClick={e=>e.stopPropagation()}><div className="modal-head"><div><span className="eyebrow">FOCUSFLOW · НОВОЕ</span><h2>{modal==='task'?(editing?'Изменить задачу':'Добавить задачу'):modal==='habit'?'Новая привычка':modal==='plan'?'Новый план':'Новая цель'}</h2></div><button type="button" className="icon-button" onClick={()=>setModal(null)}><X size={18}/></button></div>
+   {modal==='task'&&<><label>Название задачи</label><input autoFocus required placeholder="Например, пройтись 20 минут" value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})}/><div className="form-grid"><div><label>Дата</label><input type="date" value={draft.date} onChange={e=>setDraft({...draft,date:e.target.value})}/></div><div><label>Время</label><input type="time" value={draft.time} onChange={e=>setDraft({...draft,time:e.target.value})}/></div></div><label>Категория</label><select value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select><label>Заметка</label><textarea rows={2} placeholder="Контекст или следующий шаг..." value={draft.note} onChange={e=>setDraft({...draft,note:e.target.value})}/></>}
+   {modal==='habit'&&<><label>Название привычки</label><input required autoFocus placeholder="Например, читать 15 минут" value={habitDraft.title} onChange={e=>setHabitDraft({...habitDraft,title:e.target.value})}/><label>Описание / частота</label><input value={habitDraft.detail} onChange={e=>setHabitDraft({...habitDraft,detail:e.target.value})}/><label>Эмодзи</label><input value={habitDraft.icon} onChange={e=>setHabitDraft({...habitDraft,icon:e.target.value})}/></>}
+   {modal==='plan'&&<><label>Название плана</label><input required autoFocus value={planDraft.title} onChange={e=>setPlanDraft({...planDraft,title:e.target.value})} placeholder="Например, перезагрузка за 7 дней"/><label>Описание</label><textarea rows={2} value={planDraft.description} onChange={e=>setPlanDraft({...planDraft,description:e.target.value})}/><div className="form-grid"><div><label>Начало</label><input type="date" value={planDraft.start} onChange={e=>setPlanDraft({...planDraft,start:e.target.value})}/></div><div><label>Окончание</label><input type="date" value={planDraft.end} onChange={e=>setPlanDraft({...planDraft,end:e.target.value})}/></div></div><label>Категория</label><select value={planDraft.category} onChange={e=>setPlanDraft({...planDraft,category:e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select></>}
+   {modal==='goal'&&<><label>Название цели</label><input required autoFocus value={goalDraft.title} onChange={e=>setGoalDraft({...goalDraft,title:e.target.value})} placeholder="Чего хочешь достичь?"/><label>Описание</label><textarea rows={2} value={goalDraft.description} onChange={e=>setGoalDraft({...goalDraft,description:e.target.value})}/><label>Срок</label><input type="date" value={goalDraft.deadline} onChange={e=>setGoalDraft({...goalDraft,deadline:e.target.value})}/></>}
+   <div className="modal-actions"><button type="button" className="secondary-button" onClick={()=>setModal(null)}>Отмена</button><button type="submit" className="primary-button"><Plus size={16}/> Сохранить</button></div></form></div>}
+  {reasonTask&&<div className="modal-backdrop" onClick={()=>setReasonTask(null)}><form className="task-modal" onSubmit={saveReason} onClick={e=>e.stopPropagation()}><div className="modal-head"><div><span className="eyebrow">ЗАМЕТКА К ЗАДАЧЕ</span><h2>{reasonTask.title}</h2></div><button type="button" className="icon-button" onClick={()=>setReasonTask(null)}><X size={18}/></button></div><label>Что помогло или помешало выполнить?</label><textarea rows={3} value={reason} onChange={e=>setReason(e.target.value)} placeholder="Без оценок — просто наблюдение..."/><div className="modal-actions"><button className="secondary-button" type="button" onClick={()=>setReasonTask(null)}>Отмена</button><button className="primary-button">Сохранить</button></div></form></div>}
+  {toast&&<div className="toast"><Sparkles size={15}/>{toast}</div>}
+ </div>
 }
