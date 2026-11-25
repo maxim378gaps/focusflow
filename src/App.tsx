@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import {
-  Activity, ArrowUpRight, Bell, CalendarDays, Check, ChevronDown, ChevronLeft,
-  ChevronRight, Circle, Clock3, Flame, LayoutDashboard, ListTodo, MoreHorizontal,
+  Activity, ArrowUpRight, Bell, CalendarDays, Check, ChevronDown,
+  ChevronRight, Circle, Clock3, Flame, LayoutDashboard, MoreHorizontal,
   Plus, Search, Settings2, Sparkles, Target, TrendingUp, X, Zap
 } from 'lucide-react'
 
