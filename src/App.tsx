@@ -9,7 +9,7 @@ const todayKey = () => { const d=new Date(); return [d.getFullYear(),String(d.ge
 const shiftDate = (key:string,n:number) => { const d=new Date(key+'T12:00:00'); d.setDate(d.getDate()+n); return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-') }
 const uid=()=>crypto.randomUUID?.() ?? String(Date.now()+Math.random())
 function read<T>(key:string,fallback:T):T { try { const raw=localStorage.getItem('focusflow:'+key); return raw?JSON.parse(raw) as T:fallback } catch { return fallback } }
-const initialTasks:Task[]=[
+const initialTasks:Task[]=[] /* старт без выдуманной статистики */\n/* const initialTasks:Task[]=[
  {id:'t1',title:'Утренняя прогулка',date:todayKey(),time:'09:00',category:'Здоровье',note:'',done:true,completedAt:new Date().toISOString()},
  {id:'t2',title:'Сделать ключевую задачу проекта',date:todayKey(),time:'11:00',category:'Работа',note:'',done:false},
  {id:'t3',title:'Изучить один урок TypeScript',date:todayKey(),time:'14:30',category:'Обучение',note:'',done:false},
@@ -51,7 +51,7 @@ export default function App(){
  const dayTasks=tasks.filter(t=>t.date===selectedDate)
  const completed=dayTasks.filter(t=>t.done).length
  const progress=dayTasks.length?Math.round(completed/dayTasks.length*100):0
- const activeTasks=dayTasks.filter(t=>!t.done&&!exiting.includes(t.id)).filter(t=>t.title.toLowerCase().includes(search.toLowerCase()))
+ const activeTasks=dayTasks.filter(t=>!t.done).filter(t=>t.title.toLowerCase().includes(search.toLowerCase()))
  const doneTasks=dayTasks.filter(t=>t.done)
  const doneHabits=habits.filter(h=>h.log.includes(selectedDate)).length
  const dateTitle=selectedDate===todayKey()?'Сегодня':new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long'}).format(new Date(selectedDate+'T12:00:00'))
