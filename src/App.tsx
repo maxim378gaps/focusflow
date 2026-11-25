@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Activity, ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, Circle, Clock3, Flame, LayoutDashboard, MoreHorizontal, Plus, Search, Settings2, Sparkles, Target, TrendingUp, X, Zap, Pencil, Trash2, RotateCcw, BarChart3, Calendar, CheckCircle2 } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Activity, ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, Circle, Clock3, Flame, LayoutDashboard, Plus, Search, Settings2, Sparkles, Target, TrendingUp, X, Zap, Pencil, Trash2, RotateCcw, BarChart3, Calendar, CheckCircle2 } from 'lucide-react'
 
 type Task = { id:string; title:string; date:string; time:string; category:string; note:string; done:boolean; completedAt?:string; reason?:string }
 type Habit = { id:string; title:string; detail:string; icon:string; days:string[]; log:string[] }
