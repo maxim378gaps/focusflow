@@ -1,8 +1,9 @@
 export type FinanceDirection = 'income' | 'expense'
 export type FinanceCategory = 'mandatory' | 'desired' | 'emergency' | 'main_income' | 'additional_income' | 'one_time_income' | 'refund' | 'other_income'
 export type Recurrence = 'none' | 'weekly' | 'monthly' | 'yearly'
+export type FinancePlanKind = 'salary'|'savings'|'recurring'|'credit'|'debt'|'side_income'|'custom'
 export type FinanceEvent = {
-  id:string; type:'regular'|'one_time'|'goal'|'debt_i_owe'|'debt_owed_to_me'; title:string
+  id:string; type:'regular'|'one_time'|'goal'|'debt_i_owe'|'debt_owed_to_me'; planKind?:FinancePlanKind; title:string
   amount:number; currentAmount:number; direction?:FinanceDirection; category?:FinanceCategory
   isMandatory:boolean; nextDate:string|null; recurrence:Recurrence; status:'active'|'done'|'archived'
   createdAt:string; updatedAt:string
