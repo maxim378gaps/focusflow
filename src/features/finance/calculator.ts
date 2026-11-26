@@ -59,7 +59,7 @@ export function calculateForecast(data:FinanceData,today=localDate()):Forecast{
  const daysLeft=Math.max(1,dayDiff(today,next.date))
  const dailyLimit=Math.max(0,Math.floor(available/daysLeft))
  const windowStart=addDays(today,-(settings.avgDailyWindowDays-1))
- const recent=operations.filter(o=>o.direction==='expense'&&o.date>=windowStart&&o.date<=today)
+ const recent=operations.filter(o=>o.direction==='expense'&&o.category!=='mandatory'&&o.date>=windowStart&&o.date<=today)
  const spentByDay=new Map<string,number>()
  for(const op of recent)spentByDay.set(op.date,(spentByDay.get(op.date)||0)+op.amount)
  const averageDailySpend=[...spentByDay.values()].reduce((s,n)=>s+n,0)/settings.avgDailyWindowDays
