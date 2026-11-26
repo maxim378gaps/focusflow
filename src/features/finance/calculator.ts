@@ -12,7 +12,7 @@ export type FinanceOperation = {
   title:string; comment:string; date:string; createdAt:string; updatedAt:string
 }
 export type FinanceSettings = {
-  currency:'RUB'; moneyNow:number; moneyNowDate:string; moneyNowMode:'manual'|'auto'
+  currency:'RUB'; moneyNow:number; moneyNowDate:string; moneyNowUpdatedAt:string; moneyNowMode:'manual'|'auto'
   manualNextIncomeDate:string; manualNextIncomeAmount:number; avgDailyWindowDays:number; timezone:string
 }
 export type FinanceData = {version:3;settings:FinanceSettings;events:FinanceEvent[];operations:FinanceOperation[]}
@@ -35,7 +35,7 @@ export function shiftDate(value:string,recurrence:Recurrence){
  return localDate(d)
 }
 export function operationDelta(operations:FinanceOperation[],settings:FinanceSettings){
- return operations.filter(o=>o.date>settings.moneyNowDate).reduce((sum,o)=>sum+(o.direction==='income'?o.amount:-o.amount),0)
+ return operations.filter(o=>o.createdAt>settings.moneyNowUpdatedAt||o.updatedAt>settings.moneyNowUpdatedAt).reduce((sum,o)=>sum+(o.direction==='income'?o.amount:-o.amount),0)
 }
 export function currentBalance(operations:FinanceOperation[],settings:FinanceSettings){
  return settings.moneyNow+(settings.moneyNowMode==='auto'?operationDelta(operations,settings):0)
