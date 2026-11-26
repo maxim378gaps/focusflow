@@ -32,7 +32,7 @@ export default function App(){
  const [habits,setHabits]=useState<Habit[]>(()=>load('habits',[]))
  const [plans,setPlans]=useState<Plan[]>(()=>load('plans',[]))
  const [goals,setGoals]=useState<Goal[]>(()=>load('goals',[]))
- const [projects,setProjects]=useState<Project[]>(()=>load('projects',[]))
+ const [projects,setProjects]=useState<Project[]>(()=>load<Project[]>('projects',[]).map(p=>({...p,crm:p.crm??true,stages:p.stages??[],notes:p.notes??[],contacts:p.contacts??[],deals:p.deals??[],activity:p.activity??[]})))
  const [transactions,setTransactions]=useState<Transaction[]>(()=>load('transactions',[]))
  const [personalTransactions,setPersonalTransactions]=useState<PersonalTransaction[]>(()=>load('personal-transactions',[]))
  const [financePeriod,setFinancePeriod]=useState<'week'|'month'|'year'>('month')
