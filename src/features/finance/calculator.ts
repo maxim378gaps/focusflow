@@ -61,12 +61,14 @@ export function calculateForecast(data:FinanceData,today=localDate()):Forecast{
 
  // Future income operations are primary facts. Scheduled income events are a fallback;
  // matching date + amount entries are treated as one income, never added twice.
- const futureIncomeOps=operations.filter(o=>o.direction==='income'&&o.date>=today)
+ const incomeOperations=operations.filter(o=>o.direction==='income')
+ const futureIncomeOps=incomeOperations.filter(o=>o.date>today)
  const eventIncome=events.filter(e=>e.status==='active'&&['regular','one_time'].includes(e.type)&&e.direction==='income')
   .flatMap(e=>occurrences(e,today,'9999-12-31').map(date=>({date,amount:e.amount,title:e.title,eventId:e.id,source:'event' as const})))
  const incomeCandidates=futureIncomeOps.map(o=>({date:o.date,amount:o.amount,title:o.title,eventId:o.eventId||undefined,source:'operation' as const}))
  for(const item of eventIncome){
-  const duplicate=incomeCandidates.some(op=>op.date===item.date&&op.amount===item.amount&&(op.eventId===item.eventId||op.title.trim().toLowerCase()===item.title.trim().toLowerCase()))
+  const alreadyReceivedToday=incomeOperations.some(op=>op.date===item.date&&op.amount===item.amount)
+  const duplicate=alreadyReceivedToday||incomeCandidates.some(op=>op.date===item.date&&op.amount===item.amount)
   if(!duplicate)incomeCandidates.push(item)
  }
  const fallback=settings.manualNextIncomeDate>=today&&settings.manualNextIncomeDate&&settings.manualNextIncomeAmount>0
