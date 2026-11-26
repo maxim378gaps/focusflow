@@ -14,12 +14,14 @@ export type FinanceOperation = {
 export type FinanceSettings = {
   currency:'RUB'; moneyNow:number; moneyNowDate:string; moneyNowUpdatedAt:string; moneyNowMode:'auto'
   manualNextIncomeDate:string; manualNextIncomeAmount:number; avgDailyWindowDays:number; timezone:string
+  trackingStartedAt:string
 }
-export type FinanceData = {version:3;settings:FinanceSettings;events:FinanceEvent[];operations:FinanceOperation[]}
+export type FinanceData = {version:4;settings:FinanceSettings;events:FinanceEvent[];operations:FinanceOperation[]}
 export type Forecast = {
   currentBalance:number; nextIncomeDate:string|null; nextIncomeAmount:number; mandatoryEvents:number
   available:number; daysLeft:number; dailyLimit:number; averageDailySpend:number; forecastLeft:number
   status:'green'|'yellow'|'orange'|'red'|'gray'; desiredSpendWindow:number
+  mode:'locked'|'preliminary'|'full'; daysUsing:number; futureExpenses:number
 }
 export const DAY=86400000
 export const toMinor=(value:string)=>Math.round(Number(value.replace(',','.'))*100)
@@ -46,34 +48,50 @@ export function occurrences(event:FinanceEvent,from:string,to:string){
  while(date<=to&&result.length<500){if(date>=from)result.push(date);if(event.type==='one_time'||event.recurrence==='none')break;const next=shiftDate(date,event.recurrence);if(next<=date)break;date=next}
  return result
 }
+function emptyForecast(balance:number,mode:Forecast['mode'],daysUsing:number):Forecast{
+ return {currentBalance:balance,nextIncomeDate:null,nextIncomeAmount:0,mandatoryEvents:0,available:balance,daysLeft:0,dailyLimit:0,averageDailySpend:0,forecastLeft:balance,status:'gray',desiredSpendWindow:0,mode,daysUsing,futureExpenses:0}
+}
 export function calculateForecast(data:FinanceData,today=localDate()):Forecast{
  const {settings,events,operations}=data
  const balance=currentBalance(operations,settings,today)
- const incomeEvents=events.filter(e=>e.status==='active'&&['regular','one_time'].includes(e.type)&&e.direction==='income')
- const candidates=incomeEvents.flatMap(e=>occurrences(e,today,'9999-12-31').map(date=>({date,amount:e.amount}))).sort((a,b)=>a.date.localeCompare(b.date))
- const next=candidates[0]??(settings.manualNextIncomeDate>=today&&settings.manualNextIncomeDate?{date:settings.manualNextIncomeDate,amount:settings.manualNextIncomeAmount}:null)
- if(!next)return {currentBalance:balance,nextIncomeDate:null,nextIncomeAmount:0,mandatoryEvents:0,available:balance,daysLeft:0,dailyLimit:0,averageDailySpend:0,forecastLeft:0,status:'gray',desiredSpendWindow:0}
- const mandatoryEvents=events.filter(e=>e.status==='active'&&e.isMandatory&&['regular','one_time'].includes(e.type)&&e.direction==='expense')
-  .reduce((sum,e)=>sum+occurrences(e,today,next.date).filter(d=>d<=next.date).length*e.amount,0)
- const available=balance+next.amount-mandatoryEvents
- const daysLeft=Math.max(1,dayDiff(today,next.date))
- const dailyLimit=Math.max(0,Math.floor(available/daysLeft))
- const windowStart=addDays(today,-(settings.avgDailyWindowDays-1))
- const recent=operations.filter(o=>o.direction==='expense'&&o.category!=='mandatory'&&o.date>=windowStart&&o.date<=today)
- const spentByDay=new Map<string,number>()
- for(const op of recent)spentByDay.set(op.date,(spentByDay.get(op.date)||0)+op.amount)
- const averageDailySpend=[...spentByDay.values()].reduce((s,n)=>s+n,0)/settings.avgDailyWindowDays
- const forecastLeft=available-averageDailySpend*daysLeft
- const desiredSpendWindow=recent.filter(o=>o.category==='desired').reduce((s,o)=>s+o.amount,0)
- const operationDays=new Set(operations.filter(o=>o.date>=windowStart&&o.date<=today).map(o=>o.date)).size
- let status:Forecast['status']='gray'
- if(operationDays>=3){
-  const ratio=next.amount>0?forecastLeft/next.amount:(forecastLeft>=0?1:-1)
-  if(forecastLeft>=0&&ratio>0.15)status='green'
-  else if(forecastLeft>=0)status='yellow'
-  else if(desiredSpendWindow>=Math.abs(forecastLeft))status='orange'
-  else status='red'
+ const started=settings.trackingStartedAt||settings.moneyNowDate||today
+ const daysUsing=Math.max(1,dayDiff(started,today)+1)
+ const mode:Forecast['mode']=daysUsing<7?'locked':daysUsing<30?'preliminary':'full'
+ if(mode==='locked')return emptyForecast(balance,mode,daysUsing)
+
+ // Future income operations are primary facts. Scheduled income events are a fallback;
+ // matching date + amount entries are treated as one income, never added twice.
+ const futureIncomeOps=operations.filter(o=>o.direction==='income'&&o.date>=today)
+ const eventIncome=events.filter(e=>e.status==='active'&&['regular','one_time'].includes(e.type)&&e.direction==='income')
+  .flatMap(e=>occurrences(e,today,'9999-12-31').map(date=>({date,amount:e.amount,title:e.title,eventId:e.id,source:'event' as const})))
+ const incomeCandidates=futureIncomeOps.map(o=>({date:o.date,amount:o.amount,title:o.title,eventId:o.eventId||undefined,source:'operation' as const}))
+ for(const item of eventIncome){
+  const duplicate=incomeCandidates.some(op=>op.date===item.date&&op.amount===item.amount&&(op.eventId===item.eventId||op.title.trim().toLowerCase()===item.title.trim().toLowerCase()))
+  if(!duplicate)incomeCandidates.push(item)
  }
- return {currentBalance:balance,nextIncomeDate:next.date,nextIncomeAmount:next.amount,mandatoryEvents,available,daysLeft,dailyLimit,averageDailySpend,forecastLeft,status,desiredSpendWindow}
+ const fallback=settings.manualNextIncomeDate>=today&&settings.manualNextIncomeDate&&settings.manualNextIncomeAmount>0
+  ?{date:settings.manualNextIncomeDate,amount:settings.manualNextIncomeAmount,title:'Ожидаемый доход',source:'settings' as const}:null
+ if(fallback&&!incomeCandidates.some(x=>x.date===fallback.date&&x.amount===fallback.amount))incomeCandidates.push(fallback)
+ incomeCandidates.sort((a,b)=>a.date.localeCompare(b.date))
+ const next=incomeCandidates[0]
+ if(!next)return emptyForecast(balance,mode,daysUsing)
+
+ const daysLeft=Math.max(1,dayDiff(today,next.date))
+ // Only dated future operations affect the day-to-day cash forecast.
+ // Plan allocations (rent, debt repayment, savings goals) are tracked in Plans,
+ // not silently deducted a second time from the daily spending allowance.
+ const futureExpenses=operations.filter(o=>o.direction==='expense'&&o.date>today&&o.date<=next.date)
+  .reduce((sum,o)=>sum+o.amount,0)
+ const spendableUntilIncome=Math.max(0,balance-futureExpenses)
+ const dailyLimit=Math.floor(spendableUntilIncome/daysLeft)
+ const forecastLeft=balance+next.amount-futureExpenses
+ const desiredSpendWindow=operations.filter(o=>o.direction==='expense'&&o.category==='desired'&&o.date<=today&&o.date>=addDays(today,-29)).reduce((s,o)=>s+o.amount,0)
+ let status:Forecast['status']='gray'
+ const ratio=next.amount>0?forecastLeft/next.amount:(forecastLeft>=0?1:-1)
+ if(forecastLeft>=0&&ratio>0.15)status='green'
+ else if(forecastLeft>=0)status='yellow'
+ else if(desiredSpendWindow>=Math.abs(forecastLeft))status='orange'
+ else status='red'
+ return {currentBalance:balance,nextIncomeDate:next.date,nextIncomeAmount:next.amount,mandatoryEvents:0,available:spendableUntilIncome,daysLeft,dailyLimit,averageDailySpend:0,forecastLeft,status,desiredSpendWindow,mode,daysUsing,futureExpenses}
 }
 export function eventProgress(event:FinanceEvent){return Math.max(0,Math.min(100,event.amount>0?event.currentAmount/event.amount*100:0))}
