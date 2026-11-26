@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Activity, ArrowDownLeft, ArrowUpRight, BarChart3, CalendarDays, Check, ChevronLeft, ChevronRight, FolderKanban, Home, Lightbulb, ListTodo, Pencil, Plus, Search, Sparkles, Target, Trash2, TrendingUp, Wallet, X, Zap } from 'lucide-react'
 
 type Task={id:string;title:string;date:string;time:string;category:string;note:string;done:boolean;projectId?:string}
