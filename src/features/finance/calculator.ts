@@ -57,7 +57,6 @@ export function calculateForecast(data:FinanceData,today=localDate()):Forecast{
  const started=settings.trackingStartedAt||settings.moneyNowDate||today
  const daysUsing=Math.max(1,dayDiff(started,today)+1)
  const mode:Forecast['mode']=daysUsing<7?'locked':daysUsing<30?'preliminary':'full'
- if(mode==='locked')return emptyForecast(balance,mode,daysUsing)
 
  // Future income operations are primary facts. Scheduled income events are a fallback;
  // matching date + amount entries are treated as one income, never added twice.
@@ -76,6 +75,7 @@ export function calculateForecast(data:FinanceData,today=localDate()):Forecast{
  if(fallback&&!incomeCandidates.some(x=>x.date===fallback.date&&x.amount===fallback.amount))incomeCandidates.push(fallback)
  incomeCandidates.sort((a,b)=>a.date.localeCompare(b.date))
  const next=incomeCandidates[0]
+ if(mode==='locked')return {...emptyForecast(balance,mode,daysUsing),nextIncomeDate:next?.date??null,nextIncomeAmount:next?.amount??0}
  if(!next)return emptyForecast(balance,mode,daysUsing)
 
  const daysLeft=Math.max(1,dayDiff(today,next.date))
