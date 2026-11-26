@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Activity, ArrowDownLeft, ArrowUpRight, BarChart3, CalendarDays, Check, ChevronLeft, ChevronRight, CircleDollarSign, Clock3, FolderKanban, Home, Lightbulb, ListTodo, Pause, Pencil, Plus, Search, Sparkles, Target, Trash2, TrendingDown, TrendingUp, Wallet, X, Zap } from 'lucide-react'
+import { Activity, ArrowDownLeft, ArrowUpRight, BarChart3, CalendarDays, Check, ChevronLeft, ChevronRight, FolderKanban, Home, Lightbulb, ListTodo, Pencil, Plus, Search, Sparkles, Target, Trash2, TrendingUp, Wallet, X, Zap } from 'lucide-react'
 
 type Task={id:string;title:string;date:string;time:string;category:string;note:string;done:boolean;projectId?:string}
 type Thought={id:string;text:string;createdAt:string}
@@ -70,8 +70,6 @@ export default function App(){
  function addPlan(e:FormEvent){e.preventDefault();if(!planDraft.title.trim())return;setPlans(v=>[...v,{id:id(),...planDraft}]);setPlanDraft({title:'',description:'',start:today(),end:addDays(today(),6),category:'Личное'});setModal(null);notify('План создан')}
  function addGoal(e:FormEvent){e.preventDefault();if(!goalDraft.title.trim())return;setGoals(v=>[...v,{id:id(),...goalDraft}]);setGoalDraft({title:'',description:'',deadline:addDays(today(),30)});setModal(null)}
  const monthStart=calendarMonth+'-01';const offset=(new Date(monthStart+'T12:00:00').getDay()+6)%7;const days=Array.from({length:35},(_,i)=>addDays(monthStart,i-offset))
- const recentTransactions=transactions.filter(t=>!selectedProject||t.projectId===selectedProject).slice(0,6)
- const currentTitle=nav.find(x=>x.id===page)?.label??(page==='more'?'Ещё':'FocusFlow')
  return <div className="ff-app">
   <header className="ff-header"><button className="ff-brand" onClick={()=>setPage('home')}><span className="ff-brand-icon"><Sparkles size={18}/></span><span>focus<span>flow</span></span></button><div className="ff-header-right"><span className="ff-date">{new Intl.DateTimeFormat('ru-RU',{weekday:'short',day:'numeric',month:'short'}).format(new Date())}</span><button className={'ff-focus-pill'+(focus?' running':'')} onClick={()=>focus?notify('Фокус активен'):openTask()}>{focus?<><span className="ff-live-dot"/>{String(Math.floor(seconds/60)).padStart(2,'0')}:{String(seconds%60).padStart(2,'0')}</>:<><Zap size={14}/> Фокус</>}</button></div></header>
   <main className="ff-main">
