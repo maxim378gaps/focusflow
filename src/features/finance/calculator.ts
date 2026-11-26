@@ -1,5 +1,5 @@
 export type FinanceDirection = 'income' | 'expense'
-export type FinanceCategory = 'mandatory' | 'desired' | 'emergency'
+export type FinanceCategory = 'mandatory' | 'desired' | 'emergency' | 'main_income' | 'additional_income' | 'one_time_income' | 'refund' | 'other_income'
 export type Recurrence = 'none' | 'weekly' | 'monthly' | 'yearly'
 export type FinanceEvent = {
   id:string; type:'regular'|'one_time'|'goal'|'debt_i_owe'|'debt_owed_to_me'; title:string
@@ -35,10 +35,10 @@ export function shiftDate(value:string,recurrence:Recurrence){
  return localDate(d)
 }
 export function operationDelta(operations:FinanceOperation[],settings:FinanceSettings){
- return operations.filter(o=>o.createdAt>settings.moneyNowUpdatedAt||o.updatedAt>settings.moneyNowUpdatedAt).reduce((sum,o)=>sum+(o.direction==='income'?o.amount:-o.amount),0)
+ return operations.filter(o=>o.createdAt>settings.moneyNowUpdatedAt).reduce((sum,o)=>sum+(o.direction==='income'?o.amount:-o.amount),0)
 }
 export function currentBalance(operations:FinanceOperation[],settings:FinanceSettings){
- return settings.moneyNow+(settings.moneyNowMode==='auto'?operationDelta(operations,settings):0)
+ return settings.moneyNow+operationDelta(operations,settings)
 }
 export function occurrences(event:FinanceEvent,from:string,to:string){
  if(!event.nextDate||event.status!=='active'||!['regular','one_time'].includes(event.type))return [] as string[]
