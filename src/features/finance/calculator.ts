@@ -12,7 +12,7 @@ export type FinanceOperation = {
   title:string; comment:string; date:string; createdAt:string; updatedAt:string
 }
 export type FinanceSettings = {
-  currency:'RUB'; moneyNow:number; moneyNowDate:string; moneyNowUpdatedAt:string; moneyNowMode:'manual'|'auto'
+  currency:'RUB'; moneyNow:number; moneyNowDate:string; moneyNowUpdatedAt:string; moneyNowMode:'auto'
   manualNextIncomeDate:string; manualNextIncomeAmount:number; avgDailyWindowDays:number; timezone:string
 }
 export type FinanceData = {version:3;settings:FinanceSettings;events:FinanceEvent[];operations:FinanceOperation[]}
