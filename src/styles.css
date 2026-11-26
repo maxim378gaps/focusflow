@@ -128,7 +128,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
 .ff-next{position:relative;overflow:hidden;padding:22px 23px;border:1px solid #654c86;border-radius:22px;background:radial-gradient(ellipse at 90% 15%,#9b69e33d,transparent 36%),linear-gradient(115deg,#302344,#201b30 62%,#171522);box-shadow:0 18px 50px #0004}
 .ff-next-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.ff-next h2{font:800 20px Manrope;letter-spacing:-.7px;margin:7px 0;color:#fff}.ff-next p{font-size:11px;color:#b7acc7;margin:0}
 .ff-next-icon{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:14px;background:#63458a;color:#e4d4ff;box-shadow:0 0 25px #9a6bd955}
-.ff-pick-list{display:grid;gap:7px;margin-top:18px}
+.ff-pick-list{display:grid;gap:7px;margin-top:18px;max-height:250px;overflow-y:auto;padding-right:3px;scrollbar-width:thin;scrollbar-color:#65517e transparent}
 .ff-pick{width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:11px 12px;border:1px solid #514064;border-radius:12px;background:#17142199;color:#f4efff;transition:.2s}
 .ff-pick:hover{border-color:#b296ed;background:#2a2039}
 .ff-pick-dot{width:8px;height:8px;border-radius:50%;background:#c2a5ff;box-shadow:0 0 12px #c2a5ff66}
