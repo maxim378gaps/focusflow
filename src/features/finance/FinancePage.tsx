@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, CreditCard, Plus, Pencil, Search, Target, Trash2, Wallet, X } from 'lucide-react'
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, CreditCard, Plus, Pencil, Search, Trash2, Wallet, X } from 'lucide-react'
 import './finance.css'
 
 type AccountType = 'card' | 'cash' | 'savings' | 'bank' | 'other'
@@ -61,7 +61,6 @@ export default function FinancePage(){
  const now=new Date(),monthStart=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10),yearStart=now.getFullYear()+'-01-01'
  const from=period==='month'?monthStart:period==='year'?yearStart:'0000-01-01'
  const periodTx=data.transactions.filter(t=>t.date>=from&&t.date<=dateNow())
- const currentMonthTx=data.transactions.filter(t=>t.date>=monthStart&&t.date<=dateNow())
  const income=periodTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amountMinor,0)
  const expense=periodTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amountMinor,0)
  const pending=data.recurring.filter(r=>r.active&&r.nextDate<=dateNow())
