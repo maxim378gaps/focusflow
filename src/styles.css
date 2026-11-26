@@ -184,3 +184,17 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
 @keyframes ffPulse{50%{opacity:.4;box-shadow:0 0 3px #76e3b1}}
 @media(min-width:900px){.ff-main{padding-top:42px;gap:19px}.ff-bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(740px,calc(100% - 40px));border:1px solid #ffffff16;border-bottom:0;border-radius:17px 17px 0 0;padding-left:16px;padding-right:16px}}
 @media(max-width:640px){.ff-header{height:60px;padding:0 16px}.ff-date{display:none}.ff-main{width:calc(100% - 26px);padding:19px 0 20px;gap:12px}.ff-hero{min-height:137px;padding:21px 19px;border-radius:20px}.ff-hero h1{font-size:26px}.ff-hero p{font-size:10px}.ff-hero-orb{width:72px;height:72px;margin-right:4px;border-radius:24px}.ff-orb-ring{inset:-9px;border-radius:29px}.ff-capture{padding:15px}.ff-capture form{gap:8px;padding:8px}.ff-capture input{font-size:11px}.ff-energy{padding:14px 15px}.ff-energy h2{font-size:12px}.ff-batteries{gap:4px}.ff-battery{width:43px;height:37px}.ff-battery svg{width:34px}.ff-next{padding:18px 16px;border-radius:18px}.ff-next h2{font-size:17px}.ff-next p{font-size:10px}.ff-next-icon{width:35px;height:35px}.ff-pick{padding:10px}.ff-pick strong{font-size:11px}.ff-next-foot{font-size:8px}.ff-overview-grid{grid-template-columns:1fr 1fr;gap:8px}.ff-progress-metric{grid-column:1/-1}.ff-metric{padding:13px}.ff-metric>strong{font-size:23px}.ff-panel{padding:15px}.ff-section-top h2,.ff-panel h2{font-size:14px}.ff-task-row{gap:8px;font-size:11px}.ff-page-heading{align-items:flex-start}.ff-page-heading h1{font-size:28px}.ff-page-heading p{max-width:250px;line-height:1.5}.ff-page-heading>.ff-primary{padding:10px;font-size:10px;white-space:nowrap}.ff-thought-list,.ff-project-grid{grid-template-columns:1fr}.ff-thought-compose>div{align-items:flex-start;flex-direction:column}.ff-thought-compose>div .ff-primary{align-self:flex-end}.ff-project-card{padding:15px}.ff-bottom-nav button span{font-size:8px}.ff-bottom-nav button svg{width:19px;height:19px}.ff-bottom-nav{padding-left:4px;padding-right:4px}.ff-modal{padding:18px}.ff-empty-next{align-items:flex-start;flex-direction:column}.ff-project-actions button{font-size:9px}.ff-focus-window{padding:45px 19px 28px}}
+
+
+/* Motion polish: responsive feedback without delaying core interactions */
+.ff-check{transition:background .22s ease,border-color .22s ease,transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
+.ff-check:active{transform:scale(.88)}
+.ff-check.done{box-shadow:0 0 0 4px #a88cff18;animation:ffCheckPop .32s cubic-bezier(.2,.8,.2,1)}
+.ff-task-row,.ff-plan-row,.ff-habit-row,.ff-pick,.ff-project-card,.ff-thought{transition:border-color .22s ease,background .22s ease,transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
+.ff-project-card:hover,.ff-thought:hover{transform:translateY(-2px);box-shadow:0 16px 38px #0004}
+.ff-modal-backdrop{animation:ffBackdropIn .18s ease both}
+.ff-toast{animation:ffToastIn .22s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ffCheckPop{0%{transform:scale(.82)}65%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes ffBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes ffToastIn{from{opacity:0;translate:0 10px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
