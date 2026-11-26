@@ -9,7 +9,7 @@ const LEGACY_TRANSACTIONS='focusflow:personal-transactions'
 const LEGACY_BALANCE='focusflow:personal-opening-balance'
 const uid=()=>crypto.randomUUID?.()??String(Date.now()+Math.random())
 const categories=[{id:'mandatory',label:'Обязательное'},{id:'desired',label:'Желаемое'},{id:'emergency',label:'Форс-мажор'}] as const
-const emptySettings=():FinanceSettings=>({currency:'RUB',moneyNow:0,moneyNowDate:localDate(),moneyNowMode:'manual',manualNextIncomeDate:'',manualNextIncomeAmount:0,avgDailyWindowDays:14,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'})
+const emptySettings=():FinanceSettings=>({currency:'RUB',moneyNow:0,moneyNowDate:localDate(),moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'manual',manualNextIncomeDate:'',manualNextIncomeAmount:0,avgDailyWindowDays:14,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'})
 const emptyData=():FinanceData=>({version:3,settings:emptySettings(),events:[],operations:[]})
 function migrate():FinanceData{
  const today=localDate()
@@ -25,11 +25,11 @@ function migrate():FinanceData{
     ...(old.liabilities||[]).map((d:any)=>({id:d.id,type:(d.kind==='i_owe'?'debt_i_owe':'debt_owed_to_me') as FinanceEvent['type'],title:d.name,amount:d.totalMinor,currentAmount:d.totalMinor-d.remainingMinor,isMandatory:false,nextDate:d.dueDate||null,recurrence:'none' as const,status:'active' as const,createdAt:d.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()}))
    ]
    const operations:FinanceOperation[]=(old.transactions||[]).filter((t:any)=>t.type==='income'||t.type==='expense').map((t:any)=>({id:t.id,eventId:null,amount:t.amountMinor,direction:t.type,category:mapCategory(t.category),title:t.title,comment:t.note||'',date:t.date,createdAt:t.createdAt||new Date().toISOString(),updatedAt:t.updatedAt||new Date().toISOString()}))
-   return {version:3,settings:{...emptySettings(),moneyNow:oldBalance,moneyNowDate:today,moneyNowMode:'manual'},events,operations}
+   return {version:3,settings:{...emptySettings(),moneyNow:oldBalance,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'manual'},events,operations}
   }
   const legacy=JSON.parse(localStorage.getItem(LEGACY_TRANSACTIONS)||'[]') as any[]
   const opening=Math.round(Number(localStorage.getItem(LEGACY_BALANCE)||0)*100)
-  if(legacy.length||opening)return {version:3,settings:{...emptySettings(),moneyNow:opening,moneyNowDate:today,moneyNowMode:'manual'},events:[],operations:legacy.map(t=>({id:t.id||uid(),eventId:null,amount:Math.round(t.amount*100),direction:t.type,category:mapCategory(t.category),title:t.title,comment:'',date:t.date,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}))}
+  if(legacy.length||opening)return {version:3,settings:{...emptySettings(),moneyNow:opening,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'manual'},events:[],operations:legacy.map(t=>({id:t.id||uid(),eventId:null,amount:Math.round(t.amount*100),direction:t.type,category:mapCategory(t.category),title:t.title,comment:'',date:t.date,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}))}
  }catch{/* Corrupt legacy storage must not block opening the finance screen. */}
  return emptyData()
 }
