@@ -57,7 +57,7 @@ export default function FinancePage(){
  useEffect(()=>{localStorage.setItem(KEY,JSON.stringify(data))},[data])
  useEffect(()=>{if(!tx.accountId&&data.accounts[0])setTx(v=>({...v,accountId:data.accounts[0].id}))},[data.accounts,tx.accountId])
  const accounts=data.accounts.filter(a=>!a.archived)
- const total=accounts.reduce((s,a)=>s+accountBalance(a,data.transactions),0)
+ const total=data.accounts.reduce((s,a)=>s+accountBalance(a,data.transactions),0)
  const now=new Date(),monthStart=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10),yearStart=now.getFullYear()+'-01-01'
  const from=period==='month'?monthStart:period==='year'?yearStart:'0000-01-01'
  const periodTx=data.transactions.filter(t=>t.date>=from&&t.date<=dateNow())
