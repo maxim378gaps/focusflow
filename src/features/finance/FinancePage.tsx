@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Pencil, Plus, Search, Trash2, Wallet, X, CalendarClock, Target, TrendingUp } from 'lucide-react'
-import { addDays, calculateForecast, currentBalance, eventProgress, localDate, money, occurrences, shiftDate, toMinor, type FinanceData, type FinanceEvent, type FinanceOperation, type FinanceSettings } from './calculator'
+import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { addDays, calculateForecast, eventProgress, localDate, money, occurrences, shiftDate, toMinor, type FinanceData, type FinanceEvent, type FinanceOperation, type FinanceSettings } from './calculator'
 import './finance.css'
 
 const KEY='focusflow:finance-v3'
@@ -148,7 +148,6 @@ export default function FinancePage(){
   setSettingsDraft({moneyNow:(data.settings.moneyNow/100).toFixed(2),moneyNowMode:data.settings.moneyNowMode,moneyNowDate:data.settings.moneyNowDate,manualNextIncomeDate:data.settings.manualNextIncomeDate,manualNextIncomeAmount:(data.settings.manualNextIncomeAmount/100).toFixed(2),avgDailyWindowDays:String(data.settings.avgDailyWindowDays)})
   setModal('settings')
  }
- const deleteEvent=(event:FinanceEvent)=>{if(data.operations.some(o=>o.eventId===event.id)){notify('Событие связано с историей. Сначала архивируй его, чтобы сохранить операции.');return}setData(v=>({...v,events:v.events.filter(e=>e.id!==event.id)}))}
  return <section className="ff-finance">
   <header className="ff-fin-head"><div><span className="ff-kicker">FOCUSFLOW · ДЕНЕЖНЫЙ ПОТОК</span><h1>Финансы</h1><p>Понимай, сколько можешь потратить до следующего дохода.</p></div><button className="ff-primary" onClick={()=>openOperation()}><Plus size={16}/> Операция</button></header>
   <nav className="ff-fin-nav">{([{id:'now',label:'Сейчас'},{id:'movement',label:'Движение'},{id:'plans',label:'Планы'}] as const).map(item=><button key={item.id} className={tab===item.id?'active':''} onClick={()=>setTab(item.id)}>{item.label}</button>)}</nav>
