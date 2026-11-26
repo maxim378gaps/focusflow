@@ -15,7 +15,7 @@ function migrate():FinanceData{
  const today=localDate()
  try{
   const saved=localStorage.getItem(KEY)
-  if(saved){const parsed=JSON.parse(saved) as FinanceData;if(parsed.version===3)return parsed}
+  if(saved){const parsed=JSON.parse(saved) as FinanceData;if(parsed.version===3)return {...parsed,settings:{...emptySettings(),...parsed.settings,moneyNowUpdatedAt:parsed.settings.moneyNowUpdatedAt||new Date().toISOString()}}}
   const old=JSON.parse(localStorage.getItem(OLD_KEY)||'null')
   if(old?.version===2){
    const oldBalance=(old.accounts||[]).reduce((sum:number,a:any)=>sum+(a.openingMinor||0)+(old.transactions||[]).filter((t:any)=>t.date>=(a.openingDate||'0000-01-01')).reduce((n:number,t:any)=>n+(t.type==='income'&&t.accountId===a.id?t.amountMinor:0)-(t.type==='expense'&&t.accountId===a.id?t.amountMinor:0)-(t.type==='transfer'&&t.accountId===a.id?t.amountMinor:0)+(t.type==='transfer'&&t.toAccountId===a.id?t.amountMinor:0)+(t.type==='adjustment'&&t.accountId===a.id?t.amountMinor:0),0),0)
