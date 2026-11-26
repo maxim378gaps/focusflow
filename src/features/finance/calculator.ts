@@ -34,11 +34,11 @@ export function shiftDate(value:string,recurrence:Recurrence){
  if(recurrence==='yearly'){const month=d.getMonth(),day=d.getDate();d.setDate(1);d.setFullYear(d.getFullYear()+1);d.setMonth(month);d.setDate(Math.min(day,new Date(d.getFullYear(),month+1,0).getDate()))}
  return localDate(d)
 }
-export function operationDelta(operations:FinanceOperation[],settings:FinanceSettings){
- return operations.filter(o=>o.createdAt>settings.moneyNowUpdatedAt).reduce((sum,o)=>sum+(o.direction==='income'?o.amount:-o.amount),0)
+export function operationDelta(operations:FinanceOperation[],settings:FinanceSettings,today=localDate()){
+ return operations.filter(o=>o.createdAt>settings.moneyNowUpdatedAt&&o.date<=today).reduce((sum,o)=>sum+(o.direction==='income'?o.amount:-o.amount),0)
 }
-export function currentBalance(operations:FinanceOperation[],settings:FinanceSettings){
- return settings.moneyNow+operationDelta(operations,settings)
+export function currentBalance(operations:FinanceOperation[],settings:FinanceSettings,today=localDate()){
+ return settings.moneyNow+operationDelta(operations,settings,today)
 }
 export function occurrences(event:FinanceEvent,from:string,to:string){
  if(!event.nextDate||event.status!=='active'||!['regular','one_time'].includes(event.type))return [] as string[]
@@ -48,7 +48,7 @@ export function occurrences(event:FinanceEvent,from:string,to:string){
 }
 export function calculateForecast(data:FinanceData,today=localDate()):Forecast{
  const {settings,events,operations}=data
- const balance=currentBalance(operations,settings)
+ const balance=currentBalance(operations,settings,today)
  const incomeEvents=events.filter(e=>e.status==='active'&&['regular','one_time'].includes(e.type)&&e.direction==='income')
  const candidates=incomeEvents.flatMap(e=>occurrences(e,today,'9999-12-31').map(date=>({date,amount:e.amount}))).sort((a,b)=>a.date.localeCompare(b.date))
  const next=candidates[0]??(settings.manualNextIncomeDate>=today&&settings.manualNextIncomeDate?{date:settings.manualNextIncomeDate,amount:settings.manualNextIncomeAmount}:null)
