@@ -3,8 +3,9 @@ import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Pencil, Plus, Search, 
 import { addDays, calculateForecast, eventProgress, localDate, money, occurrences, shiftDate, toMinor, type FinanceData, type FinanceEvent, type FinanceOperation, type FinanceSettings } from './calculator'
 import './finance.css'
 
-const KEY='focusflow:finance-v3'
-const OLD_KEY='focusflow:finance-v2'
+const KEY='focusflow:finance-v4'
+const OLD_KEY='focusflow:finance-v3'
+const LEGACY_V2_KEY='focusflow:finance-v2'
 const LEGACY_TRANSACTIONS='focusflow:personal-transactions'
 const LEGACY_BALANCE='focusflow:personal-opening-balance'
 const uid=()=>crypto.randomUUID?.()??String(Date.now()+Math.random())
@@ -12,14 +13,21 @@ const expenseCategories=[{id:'mandatory',label:'Обязательное'},{id:'
 const incomeCategories=[{id:'main_income',label:'Основной доход'},{id:'additional_income',label:'Дополнительный доход'},{id:'one_time_income',label:'Разовый доход'},{id:'refund',label:'Возврат средств'},{id:'other_income',label:'Прочее'}] as const
 const categories=[...expenseCategories,...incomeCategories] as const
 const categoryOptions=(direction:'income'|'expense')=>direction==='income'?incomeCategories:expenseCategories
-const emptySettings=():FinanceSettings=>({currency:'RUB',moneyNow:0,moneyNowDate:localDate(),moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'auto',manualNextIncomeDate:'',manualNextIncomeAmount:0,avgDailyWindowDays:14,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'})
-const emptyData=():FinanceData=>({version:3,settings:emptySettings(),events:[],operations:[]})
+const emptySettings=():FinanceSettings=>({currency:'RUB',moneyNow:0,moneyNowDate:localDate(),moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'auto',manualNextIncomeDate:'',manualNextIncomeAmount:0,avgDailyWindowDays:14,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',trackingStartedAt:localDate()})
+const emptyData=():FinanceData=>({version:4,settings:emptySettings(),events:[],operations:[]})
 function migrate():FinanceData{
  const today=localDate()
  try{
-  const saved=localStorage.getItem(KEY)
-  if(saved){const parsed=JSON.parse(saved) as FinanceData;if(parsed.version===3){const legacyManual=String((parsed.settings as any).moneyNowMode)==='manual';return {...parsed,settings:{...emptySettings(),...parsed.settings,moneyNowMode:'auto',moneyNowUpdatedAt:legacyManual?new Date().toISOString():(parsed.settings.moneyNowUpdatedAt||new Date().toISOString())},operations:parsed.operations.map(o=>o.direction==='income'&&!String(o.category).endsWith('_income')&&o.category!=='refund'?{...o,category:'additional_income'}:o),events:parsed.events.map(e=>e.direction==='income'&&e.category&&!String(e.category).endsWith('_income')&&e.category!=='refund'?{...e,category:'additional_income'}:e)}}}
-  const old=JSON.parse(localStorage.getItem(OLD_KEY)||'null')
+  const saved=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY)
+  if(saved){
+   const parsed=JSON.parse(saved) as any
+   if(parsed.version===3||parsed.version===4){
+    const legacyManual=String(parsed.settings?.moneyNowMode)==='manual'
+    const firstOperationDate=(parsed.operations||[]).map((o:any)=>o.date).filter(Boolean).sort()[0]
+    return {version:4,settings:{...emptySettings(),...parsed.settings,moneyNowMode:'auto',moneyNowUpdatedAt:legacyManual?new Date().toISOString():(parsed.settings.moneyNowUpdatedAt||new Date().toISOString()),trackingStartedAt:parsed.settings.trackingStartedAt||parsed.settings.moneyNowDate||firstOperationDate||today},operations:(parsed.operations||[]).map((o:any)=>o.direction==='income'&&!String(o.category).endsWith('_income')&&o.category!=='refund'?{...o,category:'additional_income'}:o),events:(parsed.events||[]).map((e:any)=>e.direction==='income'&&e.category&&!String(e.category).endsWith('_income')&&e.category!=='refund'?{...e,category:'additional_income'}:e)}
+   }
+  }
+  const old=JSON.parse(localStorage.getItem(LEGACY_V2_KEY)||'null')
   if(old?.version===2){
    const oldBalance=(old.accounts||[]).reduce((sum:number,a:any)=>sum+(a.openingMinor||0)+(old.transactions||[]).filter((t:any)=>t.date>=(a.openingDate||'0000-01-01')).reduce((n:number,t:any)=>n+(t.type==='income'&&t.accountId===a.id?t.amountMinor:0)-(t.type==='expense'&&t.accountId===a.id?t.amountMinor:0)-(t.type==='transfer'&&t.accountId===a.id?t.amountMinor:0)+(t.type==='transfer'&&t.toAccountId===a.id?t.amountMinor:0)+(t.type==='adjustment'&&t.accountId===a.id?t.amountMinor:0),0),0)
    const events:FinanceEvent[]=[
@@ -28,11 +36,11 @@ function migrate():FinanceData{
     ...(old.liabilities||[]).map((d:any)=>({id:d.id,type:(d.kind==='i_owe'?'debt_i_owe':'debt_owed_to_me') as FinanceEvent['type'],title:d.name,amount:d.totalMinor,currentAmount:d.totalMinor-d.remainingMinor,isMandatory:false,nextDate:d.dueDate||null,recurrence:'none' as const,status:'active' as const,createdAt:d.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()}))
    ]
    const operations:FinanceOperation[]=(old.transactions||[]).filter((t:any)=>t.type==='income'||t.type==='expense').map((t:any)=>({id:t.id,eventId:null,amount:t.amountMinor,direction:t.type,category:t.type==='income'?'additional_income':mapCategory(t.category),title:t.title,comment:t.note||'',date:t.date,createdAt:t.createdAt||new Date().toISOString(),updatedAt:t.updatedAt||new Date().toISOString()}))
-   return {version:3,settings:{...emptySettings(),moneyNow:oldBalance,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'auto'},events,operations}
+   return {version:4,settings:{...emptySettings(),moneyNow:oldBalance,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'auto',trackingStartedAt:today},events,operations}
   }
   const legacy=JSON.parse(localStorage.getItem(LEGACY_TRANSACTIONS)||'[]') as any[]
   const opening=Math.round(Number(localStorage.getItem(LEGACY_BALANCE)||0)*100)
-  if(legacy.length||opening)return {version:3,settings:{...emptySettings(),moneyNow:opening,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'auto'},events:[],operations:legacy.map(t=>({id:t.id||uid(),eventId:null,amount:Math.round(t.amount*100),direction:t.type,category:t.type==='income'?'additional_income':mapCategory(t.category),title:t.title,comment:'',date:t.date,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}))}
+  if(legacy.length||opening)return {version:4,settings:{...emptySettings(),moneyNow:opening,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString(),moneyNowMode:'auto',trackingStartedAt:legacy.map((t:any)=>t.date).filter(Boolean).sort()[0]||today},events:[],operations:legacy.map(t=>({id:t.id||uid(),eventId:null,amount:Math.round(t.amount*100),direction:t.type,category:t.type==='income'?'additional_income':mapCategory(t.category),title:t.title,comment:'',date:t.date,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}))}
  }catch{/* Corrupt legacy storage must not block opening the finance screen. */}
  return emptyData()
 }
@@ -50,17 +58,19 @@ function statusCopy(status:ReturnType<typeof calculateForecast>['status']){
   yellow:{title:'Хватит, но без большого запаса',subtitle:'Лучше оставить часть денег на непредвиденные ситуации.',action:'Проверь желаемые расходы и ближайшие события.'},
   orange:{title:'Есть риск не дотянуть до дохода',subtitle:'Часть дефицита можно покрыть сокращением желаемых трат.',action:'Посмотри необязательные расходы за последние две недели.'},
   red:{title:'Прогноз показывает дефицит',subtitle:'Даже сокращения желаемых расходов может быть недостаточно.',action:'Пересмотри даты или суммы будущих обязательств.'},
-  gray:{title:'Пока недостаточно данных',subtitle:'Добавь ближайший доход и операции за несколько разных дней.',action:'Прогноз станет доступен после настройки.'}
+  gray:{title:'Нет ближайшего дохода',subtitle:'Добавь дату и сумму следующего ожидаемого дохода.',action:'Прогноз появится, когда будет известна следующая дата дохода.'}
  })[status]
 }
 type Tab='now'|'movement'|'plans'
-type Modal='operation'|'event'|'settings'|null
+type Modal='operation'|'event'|'settings'|'progress'|null
 export default function FinancePage(){
  const [data,setData]=useState<FinanceData>(migrate)
  const [tab,setTab]=useState<Tab>('now')
  const [modal,setModal]=useState<Modal>(null)
  const [editingOperation,setEditingOperation]=useState<string|null>(null)
  const [editingEvent,setEditingEvent]=useState<string|null>(null)
+ const [progressEventId,setProgressEventId]=useState<string|null>(null)
+ const [progressAmount,setProgressAmount]=useState('')
  const [query,setQuery]=useState('')
  const [directionFilter,setDirectionFilter]=useState('all')
  const [categoryFilter,setCategoryFilter]=useState('all')
@@ -69,11 +79,12 @@ export default function FinancePage(){
  const [notice,setNotice]=useState('')
  const [opDraft,setOpDraft]=useState({direction:'expense' as 'income'|'expense',amount:'',category:'mandatory' as FinanceOperation['category'],title:'',comment:'',date:localDate(),eventId:''})
  const [eventDraft,setEventDraft]=useState({type:'regular' as FinanceEvent['type'],title:'',amount:'',currentAmount:'0',direction:'expense' as 'income'|'expense',category:'mandatory' as FinanceOperation['category'],isMandatory:true,nextDate:addDays(localDate(),1),recurrence:'monthly' as FinanceEvent['recurrence']})
- const [settingsDraft,setSettingsDraft]=useState({openingBalance:'',manualNextIncomeDate:'',manualNextIncomeAmount:'',avgDailyWindowDays:'14'})
+ const [settingsDraft,setSettingsDraft]=useState({openingBalance:'',manualNextIncomeDate:'',manualNextIncomeAmount:''})
  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch{setNotice('Не удалось сохранить данные: проверь свободное место браузера.')}},[data])
  const today=localDate()
  const forecast=useMemo(()=>calculateForecast(data,today),[data,today])
  const status=statusCopy(forecast.status)
+ const progressEvent=data.events.find(event=>event.id===progressEventId)
  const activeEvents=data.events.filter(e=>e.status==='active')
  const upcoming=activeEvents.filter(e=>['regular','one_time'].includes(e.type)&&e.nextDate).flatMap(e=>occurrences(e,today,addDays(today,45)).map(date=>({event:e,date}))).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4)
  const goals=activeEvents.filter(e=>['goal','debt_i_owe','debt_owed_to_me'].includes(e.type))
@@ -132,23 +143,24 @@ export default function FinancePage(){
   setData(v=>({...v,operations:[operation,...v.operations],events:v.events.map(e=>e.id===event.id?{...e,nextDate:e.type==='regular'?shiftDate(date,e.recurrence):e.nextDate,status:e.type==='one_time'?'done':e.status,updatedAt:timestamp}:e)}))
   notify('Событие отмечено. Прогноз обновлён.')
  }
- function executeProgress(event:FinanceEvent){
-  const raw=window.prompt(event.type==='goal'?'Сколько добавить к накоплению?':event.type==='debt_i_owe'?'Сколько выплатил?':'Сколько получил?')
-  if(raw===null)return
-  const amount=toMinor(raw);if(!Number.isSafeInteger(amount)||amount<=0||amount>event.amount-event.currentAmount){notify('Сумма превышает оставшуюся часть.');return}
+ function openProgress(event:FinanceEvent){setProgressEventId(event.id);setProgressAmount('');setModal('progress')}
+ function saveProgress(e:FormEvent){
+  e.preventDefault()
+  const event=data.events.find(item=>item.id===progressEventId),amount=toMinor(progressAmount)
+  if(!event||!Number.isSafeInteger(amount)||amount<=0||amount>event.amount-event.currentAmount){notify('Укажи сумму в пределах оставшейся цели.');return}
   const timestamp=new Date().toISOString()
-  const operation:FinanceOperation={id:uid(),eventId:event.id,amount,direction:event.type==='debt_owed_to_me'?'income':'expense',category:event.type==='goal'?'desired':'mandatory',title:event.title,comment:'Частичное изменение финансовой цели',date:today,createdAt:timestamp,updatedAt:timestamp}
-  setData(v=>({...v,operations:[operation,...v.operations],events:v.events.map(e=>e.id===event.id?{...e,currentAmount:e.currentAmount+amount,updatedAt:timestamp}:e)}))
-  notify('Прогресс обновлён через операцию.')
+  const operation:FinanceOperation={id:uid(),eventId:event.id,amount,direction:event.type==='debt_owed_to_me'?'income':'expense',category:event.type==='goal'?'desired':'mandatory',title:event.title,comment:'Взнос / погашение по финансовому плану',date:today,createdAt:timestamp,updatedAt:timestamp}
+  setData(v=>({...v,operations:[operation,...v.operations],events:v.events.map(item=>item.id===event.id?{...item,currentAmount:item.currentAmount+amount,updatedAt:timestamp}:item)}))
+  setModal(null);setProgressEventId(null);setProgressAmount('');notify('Прогресс плана обновлён.')
  }
  function saveSettings(e:FormEvent){
   e.preventDefault();const openingBalance=toMinor(settingsDraft.openingBalance),incomeAmount=toMinor(settingsDraft.manualNextIncomeAmount)
   if((data.operations.length===0&&!Number.isSafeInteger(openingBalance))||!Number.isSafeInteger(incomeAmount)||incomeAmount<0){notify('Проверь суммы.');return}
-  setData(v=>({...v,settings:{...v.settings,...(v.operations.length===0?{moneyNow:openingBalance,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString()}:{}),moneyNowMode:'auto',manualNextIncomeDate:settingsDraft.manualNextIncomeDate,manualNextIncomeAmount:incomeAmount,avgDailyWindowDays:Math.max(3,Math.min(90,Number(settingsDraft.avgDailyWindowDays)||14))}}))
+  setData(v=>({...v,settings:{...v.settings,...(v.operations.length===0?{moneyNow:openingBalance,moneyNowDate:today,moneyNowUpdatedAt:new Date().toISOString()}:{}),moneyNowMode:'auto',manualNextIncomeDate:settingsDraft.manualNextIncomeDate,manualNextIncomeAmount:incomeAmount,trackingStartedAt:v.settings.trackingStartedAt||today}}))
   setModal(null);notify('Настройки прогноза сохранены.')
  }
  function openSettings(){
-  setSettingsDraft({openingBalance:(data.settings.moneyNow/100).toFixed(2),manualNextIncomeDate:data.settings.manualNextIncomeDate,manualNextIncomeAmount:(data.settings.manualNextIncomeAmount/100).toFixed(2),avgDailyWindowDays:String(data.settings.avgDailyWindowDays)})
+  setSettingsDraft({openingBalance:(data.settings.moneyNow/100).toFixed(2),manualNextIncomeDate:data.settings.manualNextIncomeDate,manualNextIncomeAmount:(data.settings.manualNextIncomeAmount/100).toFixed(2)})
   setModal('settings')
  }
  return <section className="ff-finance">
@@ -156,10 +168,10 @@ export default function FinancePage(){
   <nav className="ff-fin-nav">{([{id:'now',label:'Сейчас'},{id:'movement',label:'Движение'},{id:'plans',label:'Планы'}] as const).map(item=><button key={item.id} className={tab===item.id?'active':''} onClick={()=>setTab(item.id)}>{item.label}</button>)}</nav>
   {tab==='now'&&<div className="ff-fin-stack">
    <article className={'ff-fin-forecast '+forecast.status}><div className="ff-fin-forecast-top"><div><span className="ff-fin-eyebrow">ВАША СИТУАЦИЯ</span><h2>{status.title}</h2></div><span className="ff-fin-status-dot"/></div>
-    {forecast.status==='gray'?<p>{status.subtitle}</p>:<><strong className="ff-fin-daily">{money(forecast.dailyLimit)} <small>/ день</small></strong><p>{status.subtitle}</p><div className="ff-fin-forecast-grid"><div><span>До следующего дохода</span><b>{dateLabel(forecast.nextIncomeDate)} · {forecast.daysLeft} дн.</b></div><div><span>Прогнозный остаток</span><b className={forecast.forecastLeft<0?'negative':'positive'}>{money(forecast.forecastLeft)}</b></div></div></>}
+    {forecast.mode==='locked'?<><p>Собираем историю расходов. Предварительный прогноз включится через {Math.max(0,7-forecast.daysUsing)} дн.</p><div className="ff-fin-forecast-grid"><div><span>Дней использования</span><b>{forecast.daysUsing} / 7</b></div><div><span>Фактический остаток</span><b>{money(forecast.currentBalance)}</b></div></div></>:forecast.status==='gray'?<p>{status.subtitle}</p>:<><strong className="ff-fin-daily">{money(forecast.dailyLimit)} <small>/ день</small></strong><p>{forecast.mode==='preliminary'?'Предварительный расчёт по текущим данным. ':''}{status.subtitle}</p><div className="ff-fin-forecast-grid"><div><span>До следующего дохода</span><b>{dateLabel(forecast.nextIncomeDate)} · {forecast.daysLeft} дн.</b></div><div><span>Прогнозный остаток</span><b className={forecast.forecastLeft<0?'negative':'positive'}>{money(forecast.forecastLeft)}</b></div></div>{forecast.mode==='preliminary'&&<small className="ff-fin-muted">Предварительно · день {forecast.daysUsing} из 30. Полноценный прогноз откроется после месяца использования.</small>}</>}
     <div className="ff-fin-forecast-footer"><span>{status.action}</span><button onClick={openSettings}>Настроить прогноз <ChevronDown size={14}/></button></div>
    </article>
-   <div className="ff-fin-metrics"><article><span>Фактический остаток</span><strong>{money(forecast.currentBalance)}</strong></article><article><span>Обязательства до дохода</span><strong>{money(forecast.mandatoryEvents)}</strong></article><article><span>Ожидаемый доход</span><strong className="positive">+{money(forecast.nextIncomeAmount)}</strong></article></div>
+   <div className="ff-fin-metrics"><article><span>Фактический остаток</span><strong>{money(forecast.currentBalance)}</strong></article><article><span>Будущие расходы до дохода</span><strong>{money(forecast.futureExpenses)}</strong></article><article><span>Ожидаемый доход</span><strong className="positive">+{money(forecast.nextIncomeAmount)}</strong></article></div>
    <div className="ff-fin-grid"><article className="ff-fin-card"><div className="ff-fin-card-head"><h2>Ближайшие события</h2><button onClick={()=>setTab('plans')}>Все планы →</button></div>{upcoming.map(({event,date})=><div className="ff-fin-event-row" key={event.id+date}><div><b>{event.title}</b><small>{dateLabel(date)} · {event.direction==='income'?'Поступление':'Расход'}{event.isMandatory?' · обязательное':' · желаемое'}</small></div><strong>{money(event.amount)}</strong>{date===event.nextDate&&<button className="ff-fin-icon" onClick={()=>executeEvent(event,date)} title="Отметить исполненным"><Check size={15}/></button>}</div>)}{!upcoming.length&&<p className="ff-fin-empty">Добавь будущий доход или обязательный платёж — появится прогноз.</p>}</article>
     <article className="ff-fin-card"><div className="ff-fin-card-head"><h2>Мои цели и долги</h2><button onClick={()=>openEvent()}>Добавить +</button></div>{goals.slice(0,4).map(event=><div className="ff-fin-goal-row" key={event.id}><div className="ff-fin-goal-top"><b>{event.title}</b><small>{event.type==='goal'?'Накопление':event.type==='debt_i_owe'?'Я должен':'Мне должны'} · {money(event.currentAmount)} / {money(event.amount)}</small></div><div className="ff-fin-progress"><span style={{width:eventProgress(event)+'%'}}/></div></div>)}{!goals.length&&<p className="ff-fin-empty">Добавь цель накопления или долг, чтобы видеть остаток и прогресс.</p>}</article></div>
    <article className="ff-fin-card"><div className="ff-fin-card-head"><h2>Последние операции</h2><button onClick={()=>setTab('movement')}>Вся история →</button></div>{data.operations.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)).slice(0,5).map(o=><OperationRow key={o.id} operation={o} onEdit={()=>openOperation(o)} onDelete={()=>deleteOperation(o)}/>)}{!data.operations.length&&<p className="ff-fin-empty">Операций пока нет. Добавь первую фактическую трату или доход.</p>}</article>
@@ -174,13 +186,14 @@ export default function FinancePage(){
   </div>}
   {tab==='plans'&&<div className="ff-fin-stack">
    <div className="ff-fin-toolbar"><div><h2>Будущие события</h2><p>Платежи, поступления, накопления и долги в одном месте.</p></div></div>
-   {(['regular','one_time','goal','debt_i_owe','debt_owed_to_me'] as const).map(type=><article className="ff-fin-card" key={type}><div className="ff-fin-card-head"><h2>{({regular:'Регулярные события',one_time:'Разовые события',goal:'Накопления',debt_i_owe:'Я должен',debt_owed_to_me:'Мне должны'})[type]}</h2><button onClick={()=>openEvent(undefined,type)}>Добавить +</button></div>{activeEvents.filter(e=>e.type===type).map(event=><div className="ff-fin-plan-row" key={event.id}><div className="ff-fin-plan-main"><b>{event.title}</b><small>{money(event.amount)}{event.type==='regular'?' · '+({weekly:'еженедельно',monthly:'ежемесячно',yearly:'ежегодно',none:''}[event.recurrence]):''} · {dateLabel(event.nextDate)}</small>{['goal','debt_i_owe','debt_owed_to_me'].includes(event.type)&&<div className="ff-fin-progress"><span style={{width:eventProgress(event)+'%'}}/></div>}</div><div className="ff-fin-plan-actions">{['goal','debt_i_owe','debt_owed_to_me'].includes(event.type)?<button className="ff-fin-confirm" onClick={()=>executeProgress(event)}>Внести сумму</button>:event.nextDate&&<button className="ff-fin-confirm" onClick={()=>executeEvent(event)}>Исполнено</button>}<button className="ff-fin-icon" onClick={()=>openEvent(event)} aria-label="Редактировать"><Pencil size={14}/></button><button className="ff-fin-icon" onClick={()=>setData(v=>({...v,events:v.events.map(e=>e.id===event.id?{...e,status:'archived'}:e)}))} aria-label="Архивировать"><X size={14}/></button></div></div>)}{!activeEvents.some(e=>e.type===type)&&<p className="ff-fin-empty">Пока нет записей.</p>}</article>)}
+   {(['regular','one_time','goal','debt_i_owe','debt_owed_to_me'] as const).map(type=><article className="ff-fin-card" key={type}><div className="ff-fin-card-head"><h2>{({regular:'Регулярные события',one_time:'Разовые события',goal:'Накопления',debt_i_owe:'Я должен',debt_owed_to_me:'Мне должны'})[type]}</h2><button onClick={()=>openEvent(undefined,type)}>Добавить +</button></div>{activeEvents.filter(e=>e.type===type).map(event=><div className="ff-fin-plan-row" key={event.id}><div className="ff-fin-plan-main"><b>{event.title}</b><small>{money(event.amount)}{event.type==='regular'?' · '+({weekly:'еженедельно',monthly:'ежемесячно',yearly:'ежегодно',none:''}[event.recurrence]):''} · {dateLabel(event.nextDate)}</small>{['goal','debt_i_owe','debt_owed_to_me'].includes(event.type)&&<div className="ff-fin-progress"><span style={{width:eventProgress(event)+'%'}}/></div>}</div><div className="ff-fin-plan-actions">{['goal','debt_i_owe','debt_owed_to_me'].includes(event.type)?<button className="ff-fin-confirm" onClick={()=>openProgress(event)}>Внести сумму</button>:event.nextDate&&<button className="ff-fin-confirm" onClick={()=>executeEvent(event)}>Исполнено</button>}<button className="ff-fin-icon" onClick={()=>openEvent(event)} aria-label="Редактировать"><Pencil size={14}/></button><button className="ff-fin-icon" onClick={()=>setData(v=>({...v,events:v.events.map(e=>e.id===event.id?{...e,status:'archived'}:e)}))} aria-label="Архивировать"><X size={14}/></button></div></div>)}{!activeEvents.some(e=>e.type===type)&&<p className="ff-fin-empty">Пока нет записей.</p>}</article>)}
   </div>}
-  {modal&&<div className="ff-fin-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setModal(null)}}><form className="ff-fin-modal" onSubmit={modal==='operation'?saveOperation:modal==='event'?saveEvent:saveSettings}>
-   <div className="ff-fin-modal-head"><h2>{modal==='operation'?(editingOperation?'Редактировать операцию':'Новая операция'):modal==='event'?(editingEvent?'Редактировать план':'Новое событие'):'Настройка прогноза'}</h2><button type="button" onClick={()=>setModal(null)}><X size={18}/></button></div>
+  {modal&&<div className="ff-fin-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setModal(null)}}><form className="ff-fin-modal" onSubmit={modal==='operation'?saveOperation:modal==='event'?saveEvent:modal==='progress'?saveProgress:saveSettings}>
+   <div className="ff-fin-modal-head"><h2>{modal==='operation'?(editingOperation?'Редактировать операцию':'Новая операция'):modal==='event'?(editingEvent?'Редактировать план':'Новое событие'):modal==='progress'?'Отметить сумму по плану':'Настройка прогноза'}</h2><button type="button" onClick={()=>setModal(null)}><X size={18}/></button></div>
    {modal==='operation'&&<><div className="ff-fin-type-switch two"><button type="button" className={opDraft.direction==='expense'?'active':''} onClick={()=>setOpDraft(v=>({...v,direction:'expense',category:'mandatory'}))}><ArrowUpRight size={15}/> Расход</button><button type="button" className={opDraft.direction==='income'?'active':''} onClick={()=>setOpDraft(v=>({...v,direction:'income',category:'main_income'}))}><ArrowDownLeft size={15}/> Доход</button></div><label>Сумма, ₽<input autoFocus required inputMode="decimal" value={opDraft.amount} onChange={e=>setOpDraft(v=>({...v,amount:e.target.value}))} placeholder="0"/></label><label>Категория<select value={opDraft.category} onChange={e=>setOpDraft(v=>({...v,category:e.target.value as FinanceOperation['category']}))}>{categoryOptions(opDraft.direction).map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></label><label>Название<input required value={opDraft.title} onChange={e=>setOpDraft(v=>({...v,title:e.target.value}))} placeholder="Например, Продукты"/></label><label>Дата<input type="date" value={opDraft.date} onChange={e=>setOpDraft(v=>({...v,date:e.target.value}))}/></label><label>Комментарий<textarea value={opDraft.comment} onChange={e=>setOpDraft(v=>({...v,comment:e.target.value}))} placeholder="Необязательно"/></label></>}
    {modal==='event'&&<><label>Тип события<select value={eventDraft.type} onChange={e=>setEventDraft(v=>({...v,type:e.target.value as FinanceEvent['type']}))}><option value="regular">Регулярное событие</option><option value="one_time">Разовое событие</option><option value="goal">Накопить сумму</option><option value="debt_i_owe">Я должен</option><option value="debt_owed_to_me">Мне должны</option></select></label><label>Название<input required autoFocus value={eventDraft.title} onChange={e=>setEventDraft(v=>({...v,title:e.target.value}))}/></label><label>Сумма, ₽<input required inputMode="decimal" value={eventDraft.amount} onChange={e=>setEventDraft(v=>({...v,amount:e.target.value}))}/></label>{['regular','one_time'].includes(eventDraft.type)&&<><div className="ff-fin-type-switch two"><button type="button" className={eventDraft.direction==='expense'?'active':''} onClick={()=>setEventDraft(v=>({...v,direction:'expense',category:'mandatory'}))}>Расход</button><button type="button" className={eventDraft.direction==='income'?'active':''} onClick={()=>setEventDraft(v=>({...v,direction:'income',category:'main_income'}))}>Доход</button></div><label>Дата<input required type="date" value={eventDraft.nextDate} onChange={e=>setEventDraft(v=>({...v,nextDate:e.target.value}))}/></label><label>Категория<select value={eventDraft.category} onChange={e=>setEventDraft(v=>({...v,category:e.target.value as FinanceOperation['category']}))}>{categoryOptions(eventDraft.direction).map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></label>{eventDraft.direction==='expense'&&<label className="ff-fin-check"><input type="checkbox" checked={eventDraft.isMandatory} onChange={e=>setEventDraft(v=>({...v,isMandatory:e.target.checked}))}/> Обязательное событие, учитывать в прогнозе</label>}{eventDraft.type==='regular'&&<label>Повтор<select value={eventDraft.recurrence} onChange={e=>setEventDraft(v=>({...v,recurrence:e.target.value as FinanceEvent['recurrence']}))}><option value="weekly">Еженедельно</option><option value="monthly">Ежемесячно</option><option value="yearly">Ежегодно</option></select></label>}</>}{['goal','debt_i_owe','debt_owed_to_me'].includes(eventDraft.type)&&<><label>Уже внесено / погашено / получено, ₽<input inputMode="decimal" value={eventDraft.currentAmount} onChange={e=>setEventDraft(v=>({...v,currentAmount:e.target.value}))}/></label><label>Срок (необязательно)<input type="date" value={eventDraft.nextDate} onChange={e=>setEventDraft(v=>({...v,nextDate:e.target.value}))}/></label></>}</>}
-   {modal==='settings'&&<>{data.operations.length===0&&<label>Начальный остаток на счетах, ₽<input required inputMode="decimal" value={settingsDraft.openingBalance} onChange={e=>setSettingsDraft(v=>({...v,openingBalance:e.target.value}))}/></label>}<div className="ff-fin-form-grid"><label>Ближайший ожидаемый доход — дата<input type="date" value={settingsDraft.manualNextIncomeDate} onChange={e=>setSettingsDraft(v=>({...v,manualNextIncomeDate:e.target.value}))}/></label><label>Сумма дохода, ₽<input inputMode="decimal" value={settingsDraft.manualNextIncomeAmount} onChange={e=>setSettingsDraft(v=>({...v,manualNextIncomeAmount:e.target.value}))}/></label></div><label>Окно среднего расхода, дней<input type="number" min="3" max="90" value={settingsDraft.avgDailyWindowDays} onChange={e=>setSettingsDraft(v=>({...v,avgDailyWindowDays:e.target.value}))}/></label><p className="ff-fin-muted">Фактический остаток считается автоматически: начальный остаток + доходы − расходы. Будущие поступления и обязательства учитываются только в прогнозе. Начальный остаток задаётся до первой операции.</p></>}
+   {modal==='settings'&&<>{data.operations.length===0&&<label>Начальный остаток на счетах, ₽<input required inputMode="decimal" value={settingsDraft.openingBalance} onChange={e=>setSettingsDraft(v=>({...v,openingBalance:e.target.value}))}/></label>}<div className="ff-fin-form-grid"><label>Ожидаемый доход — дата<input type="date" value={settingsDraft.manualNextIncomeDate} onChange={e=>setSettingsDraft(v=>({...v,manualNextIncomeDate:e.target.value}))}/></label><label>Сумма дохода, ₽<input inputMode="decimal" value={settingsDraft.manualNextIncomeAmount} onChange={e=>setSettingsDraft(v=>({...v,manualNextIncomeAmount:e.target.value}))}/></label></div><p className="ff-fin-muted">Будущий доход влияет на прогнозный остаток, но не увеличивает сегодняшнюю сумму для трат. Дневной лимит рассчитывается только из фактически имеющихся денег за вычетом будущих операций-расходов до дохода. Начальный остаток задаётся до первой операции.</p></>}
+   {modal==='progress'&&progressEvent&&<><p className="ff-fin-muted">{progressEvent.title} · осталось {money(progressEvent.amount-progressEvent.currentAmount)}</p><label>Сумма, ₽<input autoFocus required inputMode="decimal" value={progressAmount} onChange={e=>setProgressAmount(e.target.value)} placeholder="0"/></label><p className="ff-fin-muted">Отметка обновит прогресс плана и добавит фактическую операцию. Деньги не переводятся приложением.</p></>}
    <div className="ff-fin-modal-actions"><button type="button" className="ff-secondary" onClick={()=>setModal(null)}>Отмена</button><button className="ff-primary" type="submit"><Check size={15}/> Сохранить</button></div>
   </form></div>}
   {notice&&<div className="ff-fin-notice">{notice}</div>}
