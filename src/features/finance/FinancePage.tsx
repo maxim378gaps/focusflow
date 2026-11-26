@@ -112,6 +112,6 @@ export default function FinancePage(){
  </section>
 }
 function TransactionRow({item,accounts,onEdit,onDelete}:{item:FinanceTransaction;accounts:FinanceAccount[];onEdit:()=>void;onDelete:()=>void}){
- const transfer=item.type==='transfer',income=item.type==='income',name=accounts.find(a=>a.id===item.accountId)?.name||'Счёт',destination=accounts.find(a=>a.id===item.toAccountId)?.name
+ const transfer=item.type==='transfer',income=item.type==='income'||item.type==='adjustment',name=accounts.find(a=>a.id===item.accountId)?.name||'Счёт',destination=accounts.find(a=>a.id===item.toAccountId)?.name
  return <div className="ff-fin-transaction-row"><span className={'ff-fin-transaction-icon '+(income?'income':transfer?'transfer':'expense')}>{income?<ArrowDownLeft size={17}/>:transfer?<ArrowLeftRight size={17}/>:<ArrowUpRight size={17}/>}</span><div className="ff-fin-transaction-copy"><b>{item.title}</b><small>{item.date} · {transfer?name+' → '+(destination||'Счёт'):name+' · '+item.category}</small>{item.note&&<small>{item.note}</small>}</div><strong className={income?'positive':transfer?'':'negative'}>{income?'+':transfer?'⇄':'−'}{rub(item.amountMinor)}</strong><button className="ff-fin-delete" onClick={onEdit} aria-label="Редактировать операцию"><Pencil size={14}/></button><button className="ff-fin-delete" onClick={onDelete} aria-label="Удалить операцию"><Trash2 size={14}/></button></div>
 }
