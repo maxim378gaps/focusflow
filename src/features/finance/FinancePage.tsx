@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Bell, CalendarClock, Check, ChevronDown, CreditCard, Plus, Search, Target, Trash2, Wallet, X } from 'lucide-react'
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, CreditCard, Plus, Search, Target, Trash2, Wallet, X } from 'lucide-react'
 import './finance.css'
 
 type AccountType = 'card' | 'cash' | 'savings' | 'bank' | 'other'
