@@ -207,3 +207,25 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
 /* Motion feedback for completion and financial curves */
 .ff-task-row:has(.ff-check.done){background:linear-gradient(90deg,#9c7ce510,transparent);border-radius:10px;transition:background .28s ease,opacity .28s ease}.ff-check.done{animation:ffCompletionPop .34s cubic-bezier(.2,.8,.2,1)}@keyframes ffCompletionPop{0%{transform:scale(.72)}65%{transform:scale(1.16)}100%{transform:scale(1)}}.ff-chart-income,.ff-chart-expense{stroke-dasharray:1000;stroke-dashoffset:1000;animation:ffChartDraw 1.1s cubic-bezier(.2,.8,.2,1) forwards}@keyframes ffChartDraw{to{stroke-dashoffset:0}}.ff-project-note,.ff-activity-row{animation:ffSoftEnter .24s ease both}@keyframes ffSoftEnter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.ff-chart-income,.ff-chart-expense{animation:none;stroke-dashoffset:0}.ff-project-note,.ff-activity-row{animation:none}}
+
+
+/* Refined project workspace forms and meaningful energy guidance */
+.ff-energy-guidance{max-width:390px;margin:6px 0 0;color:#918aa0;font-size:10px;line-height:1.55}
+.ff-energy-hint{display:flex;flex-direction:column;gap:4px;max-width:390px;margin-top:12px;padding:11px 13px;border:1px solid #55436f;border-radius:12px;background:linear-gradient(110deg,#302442aa,#1b1926)}
+.ff-energy-hint strong{font-size:10px;color:#d9c7ff;letter-spacing:.02em}.ff-energy-hint span{font-size:10px;line-height:1.5;color:#aaa1b9}
+.ff-chart-balance{fill:none;stroke:#f3a34b;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1000;stroke-dashoffset:1000;animation:ffChartDraw 1.1s cubic-bezier(.2,.8,.2,1) forwards}
+.ff-chart-legend .balance{color:#f3a34b}.ff-chart-caption{margin:4px 2px 0;color:#898398;font-size:9px;line-height:1.5}
+.ff-inline-add{align-items:stretch;padding:9px;border:1px solid #393247;border-radius:13px;background:linear-gradient(135deg,#1d1a29,#171520)}
+.ff-inline-add input{padding:12px 13px;border:1px solid #373044;border-radius:10px;background:#11101a;color:#f4efff;font-size:12px;outline:none;transition:border-color .2s,box-shadow .2s}
+.ff-inline-add input:focus,.ff-note-compose textarea:focus,.ff-crm-form input:focus,.ff-crm-form select:focus{border-color:#9b7bdd;box-shadow:0 0 0 3px #a88cff18}
+.ff-inline-add input::placeholder,.ff-note-compose textarea::placeholder,.ff-crm-form input::placeholder{color:#756e82}
+.ff-inline-add .ff-primary{white-space:nowrap;min-height:42px}
+.ff-note-compose{padding:10px;border:1px solid #393247;border-radius:13px;background:linear-gradient(135deg,#1d1a29,#171520)}
+.ff-note-compose textarea{min-height:105px;padding:12px 13px;border:1px solid #373044;border-radius:10px;background:#11101a;color:#f4efff;font:12px/1.6 inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+.ff-note-compose .ff-primary{justify-self:end;min-height:40px}
+.ff-crm-form{padding:11px;border:1px solid #393247;border-radius:13px;background:linear-gradient(135deg,#1d1a29,#171520)}
+.ff-crm-form input,.ff-crm-form select{min-height:41px;padding:11px 12px;background:#11101a}
+.ff-crm-form button{min-height:40px;padding-inline:16px}
+.ff-project-detail-grid .ff-metric{border:1px solid #ffffff0d}
+@media(max-width:560px){.ff-energy-guidance{font-size:9px}.ff-energy-hint{margin-top:9px}.ff-inline-add{padding:8px}.ff-inline-add .ff-primary{justify-content:center}.ff-note-compose .ff-primary{width:100%;justify-content:center}.ff-chart-legend{gap:8px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.ff-chart-balance{animation:none;stroke-dashoffset:0}}
