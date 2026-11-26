@@ -65,7 +65,7 @@ export function calculateForecast(data:FinanceData,today=localDate()):Forecast{
  const futureIncomeOps=incomeOperations.filter(o=>o.date>today)
  const eventIncome=events.filter(e=>e.status==='active'&&['regular','one_time'].includes(e.type)&&e.direction==='income')
   .flatMap(e=>occurrences(e,today,'9999-12-31').map(date=>({date,amount:e.amount,title:e.title,eventId:e.id,source:'event' as const})))
- const incomeCandidates=futureIncomeOps.map(o=>({date:o.date,amount:o.amount,title:o.title,eventId:o.eventId||undefined,source:'operation' as const}))
+ const incomeCandidates:{date:string;amount:number;title:string;eventId?:string;source:'operation'|'event'|'settings'}[]=futureIncomeOps.map(o=>({date:o.date,amount:o.amount,title:o.title,eventId:o.eventId||undefined,source:'operation'}))
  for(const item of eventIncome){
   const alreadyReceivedToday=incomeOperations.some(op=>op.date===item.date&&op.amount===item.amount)
   const duplicate=alreadyReceivedToday||incomeCandidates.some(op=>op.date===item.date&&op.amount===item.amount)
