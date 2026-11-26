@@ -88,7 +88,7 @@ export default function FinancePage(){
  const activeEvents=data.events.filter(e=>e.status==='active')
  const upcoming=activeEvents.filter(e=>['regular','one_time'].includes(e.type)&&e.nextDate).flatMap(e=>occurrences(e,today,addDays(today,45)).map(date=>({event:e,date}))).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4)
  const goals=activeEvents.filter(e=>['goal','debt_i_owe','debt_owed_to_me'].includes(e.type))
- const paydayToday=activeEvents.some(e=>['regular','one_time'].includes(e.type)&&e.direction==='income'&&occurrences(e,today,today).includes(today))
+ const paydayToday=data.operations.some(o=>o.direction==='income'&&o.date===today&&o.category==='main_income')||activeEvents.some(e=>['regular','one_time'].includes(e.type)&&e.direction==='income'&&occurrences(e,today,today).includes(today))
  const from=period==='week'?addDays(today,-6):period==='month'?today.slice(0,7)+'-01':period==='year'?today.slice(0,4)+'-01-01':'0000-01-01'
  const periodOps=data.operations.filter(o=>o.date>=from&&o.date<=today)
  const income=periodOps.filter(o=>o.direction==='income').reduce((s,o)=>s+o.amount,0)
