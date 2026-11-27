@@ -297,3 +297,14 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
 .ff-app{min-height:var(--tg-viewport-stable-height,100vh);padding-bottom:calc(88px + max(env(safe-area-inset-bottom),var(--tg-safe-area-inset-bottom,0px)))}
 .ff-bottom-nav{padding-bottom:calc(8px + max(env(safe-area-inset-bottom),var(--tg-safe-area-inset-bottom,0px)))}
 @supports(height:100dvh){.ff-app{min-height:var(--tg-viewport-stable-height,100dvh)}}
+
+
+/* Task outcomes, priority guidance and schedule editing */
+.ff-stuck-badge{display:inline-flex!important;width:max-content;max-width:100%;margin:5px 0 2px;padding:4px 7px;border:1px solid #9a714c66;border-radius:7px;background:#4a342333;color:#e7b989!important;font-size:9px!important;line-height:1.35}
+.ff-task-outcome{display:block!important;margin-top:5px;color:#d4a9a9!important;font-size:10px!important}
+.ff-next-context{display:block;margin:8px 0 2px;color:#c6b0ec;font-size:10px;line-height:1.5}
+.ff-toggle-field{display:flex;align-items:center;gap:9px;margin:9px 0;color:#c9c0d5;font-size:11px}
+.ff-toggle-field input{width:16px;height:16px;accent-color:#a88cff}
+.ff-habit-row .ff-icon-btn{flex-shrink:0}
+.ff-habit-card-foot span{line-height:1.45}
+.ff-habit-calendar span.due:not(.checked){background:#211c2b;color:#b5a8c8}
