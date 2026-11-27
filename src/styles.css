@@ -614,3 +614,47 @@ body{min-height:100%;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .ff-app{overscroll-behavior-y:contain;touch-action:pan-y}
 .ff-main{scroll-margin-top:12px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+
+/* Hard containment for native date/time controls in narrow mobile dialogs */
+@media(max-width:640px){
+ .ff-modal .ff-form-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+ }
+ .ff-modal .ff-form-grid>div{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+ }
+ .ff-modal .ff-form-grid input[type="date"],
+ .ff-modal .ff-form-grid input[type="time"]{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  inline-size:100%!important;
+  min-inline-size:0!important;
+  max-inline-size:100%!important;
+  box-sizing:border-box!important;
+  padding-inline:8px!important;
+  font-size:14px!important;
+  overflow:hidden!important;
+ }
+ .ff-modal .ff-form-grid input[type="date"]::-webkit-date-and-time-value,
+ .ff-modal .ff-form-grid input[type="time"]::-webkit-date-and-time-value{
+  min-width:0;
+  max-width:100%;
+  text-align:left;
+ }
+ .ff-modal .ff-form-grid input[type="date"]::-webkit-calendar-picker-indicator,
+ .ff-modal .ff-form-grid input[type="time"]::-webkit-calendar-picker-indicator{
+  max-width:18px;
+  margin:0;
+  padding:0;
+ }
+}
