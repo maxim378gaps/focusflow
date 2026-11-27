@@ -86,6 +86,7 @@ export default function FinancePage(){
  const [eventDraft,setEventDraft]=useState({type:'regular' as FinanceEvent['type'],planKind:'recurring' as FinancePlanKind,title:'',amount:'',currentAmount:'0',direction:'expense' as 'income'|'expense',category:'mandatory' as FinanceOperation['category'],isMandatory:true,nextDate:addDays(localDate(),1),recurrence:'monthly' as FinanceEvent['recurrence']})
  const [settingsDraft,setSettingsDraft]=useState({openingBalance:'',manualNextIncomeDate:'',manualNextIncomeAmount:''})
  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch{setNotice('Не удалось сохранить данные: проверь свободное место браузера.')}},[data])
+ useEffect(()=>{if(!modal)return;const body=document.body,root=document.documentElement;const previousBody=body.style.overflow,previousRoot=root.style.overflow;body.style.overflow='hidden';root.style.overflow='hidden';return()=>{body.style.overflow=previousBody;root.style.overflow=previousRoot}},[modal])
  const today=localDate()
  const forecast=useMemo(()=>calculateForecast(data,today),[data,today])
  const status=statusCopy(forecast.status)
