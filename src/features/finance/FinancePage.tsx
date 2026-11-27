@@ -44,6 +44,7 @@ function migrate():FinanceData{
  }catch{/* Corrupt legacy storage must not block opening the finance screen. */}
  return emptyData()
 }
+export function getFinanceHomeSummary(){const data=migrate();const forecast=calculateForecast(data,localDate());return {balance:money(forecast.currentBalance),status:forecast.status,forecastLeft:money(forecast.forecastLeft),dailyLimit:money(forecast.dailyLimit),nextIncomeDate:forecast.nextIncomeDate,daysLeft:forecast.daysLeft,mode:forecast.mode}}
 function mapCategory(value:string):FinanceOperation['category']{
  const v=(value||'').toLowerCase()
  if(/аренд|жиль|продукт|транспорт|кредит|связ|коммун|обязат/.test(v))return 'mandatory'
