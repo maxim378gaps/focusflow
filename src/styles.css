@@ -437,3 +437,51 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
  .ff-form-grid{grid-template-columns:minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){.ff-hero-orb{animation:none}}
+
+
+/* Telegram mobile modal: keyboard-aware, full form remains reachable */
+@media(max-width:640px){
+ .ff-modal-backdrop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:8px 0 0;
+  overflow:hidden;
+  height:var(--tg-viewport-height,100dvh);
+  max-height:var(--tg-viewport-height,100dvh);
+ }
+ .ff-modal{
+  display:block;
+  flex:none;
+  width:100%;
+  max-height:calc(var(--tg-viewport-height,100dvh) - 16px);
+  height:auto;
+  margin:0;
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  border-radius:22px 22px 0 0;
+ }
+ .ff-modal-head{
+  position:relative;
+  top:auto;
+  z-index:auto;
+  margin:0 0 16px;
+  padding:0 0 14px;
+  background:transparent;
+  backdrop-filter:none;
+  border-bottom:1px solid #ffffff12;
+ }
+ .ff-modal-actions{
+  position:relative;
+  bottom:auto;
+  margin:20px 0 0;
+  padding:14px 0 0;
+  background:transparent;
+  backdrop-filter:none;
+  border-top:1px solid #ffffff12;
+ }
+ .ff-modal label{font-size:13px;line-height:1.4}
+ .ff-modal input,.ff-modal textarea,.ff-modal select{font-size:16px}
+}
