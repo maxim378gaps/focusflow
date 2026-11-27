@@ -326,3 +326,27 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
 
 .ff-form-hint{display:block;margin:-3px 0 9px;color:#92899f;font-size:9px;line-height:1.5}
 .ff-next-why{display:block;margin-top:8px;color:#d0baff;font-size:10px;line-height:1.45}
+
+/* Unified home: one priority, four quiet summaries */
+.ff-home-priority{padding:21px 22px;border:1px solid #654c86;border-radius:21px;background:radial-gradient(ellipse at 90% 15%,#9b69e33d,transparent 36%),linear-gradient(115deg,#302344,#201b30 62%,#171522);box-shadow:0 18px 50px #0004}
+.ff-home-priority h2{font:800 20px Manrope;letter-spacing:-.6px;margin:8px 0;color:#fff}
+.ff-home-priority p{font-size:11px;line-height:1.55;color:#b7acc7;margin:0}
+.ff-home-priority-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:12px;border-top:1px solid #ffffff16}
+.ff-home-priority-foot>span{font-size:8px;letter-spacing:.12em;color:#a99dbb}
+.ff-home-priority-foot button{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:#d4c2ff;font-size:10px}
+.ff-home-overview{padding:18px 20px;border:1px solid var(--ff-line);border-radius:19px;background:linear-gradient(145deg,#191827,#13131e);box-shadow:0 12px 36px #0002}
+.ff-home-overview .ff-section-top{margin-bottom:5px}
+.ff-home-summary-list{display:grid}
+.ff-home-summary-row{display:flex;align-items:center;gap:12px;width:100%;padding:13px 2px;border:0;border-bottom:1px solid #ffffff0b;background:transparent;color:#a89fb8;text-align:left}
+.ff-home-summary-row:last-child{border-bottom:0}
+.ff-home-summary-row>svg{flex:none;color:#746b82}
+.ff-home-summary-icon{width:34px;height:34px;display:grid;place-items:center;flex:none;border-radius:11px;background:#282237;color:#c3a9ff}
+.ff-home-summary-copy{display:grid;gap:4px;flex:1;min-width:0}
+.ff-home-summary-copy strong{font-size:11px;color:#f0ebf8}
+.ff-home-summary-copy small{font-size:9px;line-height:1.4;color:#8f899e}
+.ff-home-summary-copy .ff-home-result{color:#c6b0f3}
+.ff-home-finance.red .ff-home-summary-icon{background:#40252d;color:#ff8c96}
+.ff-home-finance.orange .ff-home-summary-icon{background:#3d2c22;color:#f1b56c}
+.ff-home-finance.red .ff-home-summary-copy small{color:#ff929b}
+.ff-home-finance.orange .ff-home-summary-copy small{color:#f1b56c}
+@media(max-width:600px){.ff-home-priority{padding:17px}.ff-home-overview{padding:15px}.ff-home-summary-row{gap:9px}}
