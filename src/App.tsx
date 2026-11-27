@@ -24,7 +24,7 @@ const nav=[{id:'home',label:'Главная',Icon:Home},{id:'tasks',label:'За�
 function weekDay(date:string){return (new Date(date+'T12:00:00').getDay()+6)%7}
 function isDue(h:Habit,date:string){const s=h.schedule??{type:'daily' as const,days:[0,1,2,3,4,5,6],target:7};if(s.type==='daily')return true;if(s.type==='weekdays')return weekDay(date)<5;if(s.type==='custom')return s.days.includes(weekDay(date));return s.days.includes(weekDay(date))}
 function habitStreak(h:Habit){let cursor=today(),count=0;if(!h.log.includes(cursor)&&isDue(h,cursor))cursor=addDays(cursor,-1);for(let i=0;i<370;i++){if(isDue(h,cursor)){if(h.log.includes(cursor))count++;else break}cursor=addDays(cursor,-1)}return count}
-function App(){
+export default function App(){
  const [page,setPage]=useState('home')
  const [taskTab,setTaskTab]=useState<'tasks'|'thoughts'|'calendar'>('tasks')
  const [tasks,setTasks]=useState<Task[]>(()=>load<Task[]>('tasks',[]).map(t=>({...t,resultHistory:t.resultHistory??[]})))
