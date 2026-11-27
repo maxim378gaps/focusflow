@@ -10,7 +10,7 @@ export type FinanceEvent = {
 }
 export type FinanceOperation = {
   id:string; eventId:string|null; amount:number; direction:FinanceDirection; category:FinanceCategory
-  title:string; comment:string; date:string; createdAt:string; updatedAt:string
+  title:string; comment:string; date:string; createdAt:string; updatedAt:string; taskId?:string
 }
 export type FinanceSettings = {
   currency:'RUB'; moneyNow:number; moneyNowDate:string; moneyNowUpdatedAt:string; moneyNowMode:'auto'
