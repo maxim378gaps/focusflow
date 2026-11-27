@@ -371,3 +371,14 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
  .ff-home-priority-actions button{flex:1;min-width:0}
  .ff-home-priority-foot button.ff-home-open{width:100%}
 }
+
+
+/* Clear visual status for the important task on Home */
+.ff-home-task-status{display:inline-flex;align-items:center;gap:7px;margin:0 0 9px;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:700;line-height:1.2}
+.ff-home-task-status i{display:block;width:7px;height:7px;border-radius:50%;flex:none}
+.ff-home-task-status.overdue{color:#ffaaaa;background:#ff4d4d18;border:1px solid #ff646433}
+.ff-home-task-status.overdue i{background:#ff6262;box-shadow:0 0 9px #ff626277}
+.ff-home-task-status.today{color:#b8e9c9;background:#45c98216;border:1px solid #45c98230}
+.ff-home-task-status.today i{background:#54d68d}
+.ff-home-task-status.planned{color:#ffd39a;background:#ffad4218;border:1px solid #ffad4233}
+.ff-home-task-status.planned i{background:#ffad42;box-shadow:0 0 8px #ffad4266}
