@@ -45,6 +45,8 @@ function migrate():FinanceData{
  return emptyData()
 }
 export function getFinanceHomeSummary(){const data=migrate();const forecast=calculateForecast(data,localDate());return {balance:money(forecast.currentBalance),status:forecast.status,forecastLeft:money(forecast.forecastLeft),dailyLimit:money(forecast.dailyLimit),nextIncomeDate:forecast.nextIncomeDate,daysLeft:forecast.daysLeft,mode:forecast.mode}}
+export function hasTaskIncome(taskId:string){return migrate().operations.some(operation=>operation.taskId===taskId)}
+export function addIncomeFromTask(taskId:string,title:string,amount:string){const data=migrate();if(data.operations.some(operation=>operation.taskId===taskId))return false;const value=Number(String(amount).replace(',','.'));if(!Number.isFinite(value)||value<=0)return false;const stamp=new Date().toISOString();const operation:FinanceOperation={id:uid(),eventId:null,amount:Math.round(value*100),direction:'income',category:'additional_income',title:'Доход по задаче: '+title,comment:'Добавлено из результата задачи',date:localDate(),createdAt:stamp,updatedAt:stamp,taskId};try{localStorage.setItem(KEY,JSON.stringify({...data,operations:[operation,...data.operations]}));return true}catch{return false}}
 function mapCategory(value:string):FinanceOperation['category']{
  const v=(value||'').toLowerCase()
  if(/аренд|жиль|продукт|транспорт|кредит|связ|коммун|обязат/.test(v))return 'mandatory'
