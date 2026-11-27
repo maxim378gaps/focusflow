@@ -485,3 +485,27 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
  .ff-modal label{font-size:13px;line-height:1.4}
  .ff-modal input,.ff-modal textarea,.ff-modal select{font-size:16px}
 }
+
+
+/* Compact modal width and robust date/time controls on phones */
+@media(max-width:640px){
+ .ff-modal-backdrop{padding:12px 0;align-items:center}
+ .ff-modal{
+  width:calc(100% - 28px);
+  max-width:520px;
+  max-height:calc(var(--tg-viewport-height,100dvh) - 24px);
+  margin:0 auto;
+  border:1px solid #514065;
+  border-radius:20px;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+ }
+ .ff-form-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+ .ff-form-grid>div{min-width:0;max-width:100%;overflow:hidden}
+ .ff-form-grid input{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;padding:10px 7px;font-size:15px}
+ .ff-form-grid input[type="date"]{min-width:0;max-width:100%;font-size:13px}
+ .ff-form-grid input[type="time"]{min-width:0;max-width:100%;font-size:15px}
+}
+@media(max-width:370px){
+ .ff-form-grid{grid-template-columns:minmax(0,1fr)}
+}
+.ff-home-result{display:block;margin-top:5px;color:#cdb9f5!important;font-size:12px!important;line-height:1.45}
