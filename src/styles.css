@@ -509,3 +509,43 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
  .ff-form-grid{grid-template-columns:minmax(0,1fr)}
 }
 .ff-home-result{display:block;margin-top:5px;color:#cdb9f5!important;font-size:12px!important;line-height:1.45}
+
+
+/* Mobile refinement: keep the hero animation without letting it collide with copy */
+@media(max-width:640px){
+ .ff-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 58px;
+  align-items:center;
+  column-gap:14px;
+ }
+ .ff-hero>div:first-child{max-width:none;min-width:0}
+ .ff-hero-orb{
+  width:58px;height:58px;margin:0;
+  animation:ffFloat 5s ease-in-out infinite;
+  transform:rotate(-8deg);
+  box-shadow:0 0 28px #a37aff44;
+ }
+ .ff-orb-ring{inset:-7px;border-radius:25px}
+ /* A single column prevents native date/time controls from colliding */
+ .ff-form-grid{grid-template-columns:minmax(0,1fr);gap:4px}
+ .ff-form-grid>div{width:100%;min-width:0;overflow:visible}
+ .ff-form-grid input[type="date"],
+ .ff-form-grid input[type="time"]{width:100%;max-width:100%;min-width:0;font-size:16px;padding:11px 12px}
+ .ff-modal-backdrop{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;padding:14px;
+  background:#07060deb;
+  overflow-y:auto;overflow-x:hidden;
+ }
+ .ff-modal{
+  width:100%;max-width:520px;
+  max-height:calc(var(--tg-viewport-height,100dvh) - 28px);
+  margin:0 auto;border:1px solid #514065;border-radius:20px;
+  overflow-x:hidden;overflow-y:auto;
+ }
+}
+@media(max-width:380px){
+ .ff-hero{grid-template-columns:minmax(0,1fr) 50px;column-gap:10px}
+ .ff-hero-orb{width:50px;height:50px}
+}
