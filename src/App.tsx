@@ -50,6 +50,7 @@ export default function App(){
  const [projectDraft,setProjectDraft]=useState({name:'',description:'',resultQuestion:'',resultTarget:'',resultValue:'',resultUnit:''})
  const [thoughtSearch,setThoughtSearch]=useState('')
  const [showThoughtArchive,setShowThoughtArchive]=useState(false)
+ useEffect(()=>{const webApp=(window as any).Telegram?.WebApp;const back=webApp?.BackButton;if(!back)return;const onBack=()=>{if(modal){setModal(null);return}if(page==='project-detail'){setPage('projects');return}if(page!=='home')setPage('home')};if(modal||page!=='home')back.show();else back.hide();back.onClick(onBack);return()=>back.offClick(onBack)},[page,modal])
  useEffect(()=>save('tasks',tasks),[tasks]);useEffect(()=>save('thoughts',thoughts),[thoughts]);useEffect(()=>save('habits',habits),[habits]);useEffect(()=>save('projects',projects),[projects]);useEffect(()=>save('focus-session',focus),[focus])
  useEffect(()=>{const t=window.setInterval(()=>setNow(Date.now()),500);return()=>window.clearInterval(t)},[])
  useEffect(()=>{if(focus&&focus.endAt<=Date.now()){setFocus(null);notify('25 минут фокуса завершены. Сделай короткую паузу.')}},[now])
