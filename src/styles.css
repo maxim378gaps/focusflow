@@ -579,3 +579,30 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
   min-height:18px;margin:0!important;padding:0;align-self:center;
  }
 }
+
+/* Mobile foundation: one page scroll, safe areas and viewport-aware overlays */
+html,body,#root{min-height:100%;min-width:320px}
+html{overscroll-behavior-y:none}
+body{overflow-x:hidden;overscroll-behavior-x:none}
+.ff-app{min-height:var(--ff-viewport-height, var(--tg-viewport-stable-height, 100dvh));padding-bottom:calc(88px + max(env(safe-area-inset-bottom),var(--ff-safe-bottom,0px),var(--tg-safe-area-inset-bottom,0px)))}
+.ff-header{padding-top:max(0px,env(safe-area-inset-top),var(--ff-safe-top,0px));height:calc(68px + max(env(safe-area-inset-top),var(--ff-safe-top,0px)))}
+.ff-main,.ff-main>*{min-width:0;max-width:100%}
+.ff-bottom-nav{padding-bottom:calc(8px + max(env(safe-area-inset-bottom),var(--ff-safe-bottom,0px),var(--tg-safe-area-inset-bottom,0px)))}
+.ff-modal-backdrop{overscroll-behavior:contain}
+.ff-modal{max-height:calc(var(--ff-viewport-height, var(--tg-viewport-height, 100dvh)) - max(20px,env(safe-area-inset-top)) - max(20px,env(safe-area-inset-bottom)));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.ff-focus-overlay{padding-top:max(18px,env(safe-area-inset-top));padding-bottom:max(18px,env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain}
+.ff-focus-window{max-height:calc(var(--ff-viewport-height,100dvh) - max(36px,env(safe-area-inset-top)) - max(36px,env(safe-area-inset-bottom)));overflow-y:auto;overscroll-behavior:contain}
+.ff-icon-btn,.ff-fin-icon,.ff-focus-close{min-width:44px;min-height:44px}
+.ff-bottom-nav button{min-height:48px}
+@media(max-width:640px){
+ .ff-main{width:calc(100% - 24px)}
+ .ff-modal-backdrop{height:var(--ff-viewport-height,var(--tg-viewport-height,100dvh));max-height:var(--ff-viewport-height,var(--tg-viewport-height,100dvh));}
+ .ff-modal{max-height:calc(var(--ff-viewport-height,var(--tg-viewport-height,100dvh)) - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom)));padding-bottom:calc(18px + max(env(safe-area-inset-bottom),var(--ff-safe-bottom,0px)))}
+}
+@media(max-width:360px){
+ .ff-main{width:calc(100% - 20px)}
+ .ff-calendar{gap:2px}
+ .ff-calendar button{min-width:0;border-radius:7px}
+ .ff-calendar>span{padding:5px 0;font-size:8px}
+ .ff-thought-list{grid-template-columns:minmax(0,1fr)}
+}
