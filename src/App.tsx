@@ -76,7 +76,6 @@ export default function App(){
  const openTasks=tasks.filter(t=>!t.done).sort((a,b)=>a.date.localeCompare(b.date))
   const nextCandidates=[...openTasks].sort((a,b)=>{const rank=(t:Task)=>isStuck(t)?0:t.projectId&&t.date<=addDays(today(),3)?1:t.priority?2:t.resultStatus==='partial'?3:4;return rank(a)-rank(b)||a.date.localeCompare(b.date)||String(a.lastResultAt??'').localeCompare(String(b.lastResultAt??''))})
  const nextTask=nextCandidates.length?nextCandidates[Math.min(nextIndex,nextCandidates.length-1)]:undefined
-  const nextReason=nextTask?(isStuck(nextTask)?'Давно не обновлялся результат':nextTask.projectId&&nextTask.date<=addDays(today(),3)?'Срок задачи проекта скоро':nextTask.priority?'Отмечена как приоритетная':nextTask.resultStatus==='partial'?'Есть незавершённый результат':nextTask.date<today()?'Срок прошёл':nextTask.date===today()?'Запланирована на сегодня':'Запланирована на '+dateLabel(nextTask.date)) : ''
  const focusTask=focus?tasks.find(t=>t.id===focus.taskId):undefined
  const seconds=focus?Math.max(0,Math.ceil((focus.endAt-now)/1000)):0
  const activeProject=projects.find(p=>p.id===selectedProject)
