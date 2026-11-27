@@ -291,3 +291,9 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
 .ff-result-task{align-items:flex-start}
 .ff-result-task>span{padding-top:2px}
 .ff-result-task>span>small{white-space:normal;line-height:1.45}
+
+
+/* Telegram Mini App viewport and native safe-area integration */
+.ff-app{min-height:var(--tg-viewport-stable-height,100vh);padding-bottom:calc(88px + max(env(safe-area-inset-bottom),var(--tg-safe-area-inset-bottom,0px)))}
+.ff-bottom-nav{padding-bottom:calc(8px + max(env(safe-area-inset-bottom),var(--tg-safe-area-inset-bottom,0px)))}
+@supports(height:100dvh){.ff-app{min-height:var(--tg-viewport-stable-height,100dvh)}}
