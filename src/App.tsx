@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import FinancePage from './features/finance/FinancePage'
 import { motion } from 'motion/react'
-import { Activity, Check, ChevronLeft, ChevronRight, FolderKanban, Home, Lightbulb, ListTodo, Pencil, Plus, Search, Sparkles, Trash2, TrendingUp, Wallet, X, Zap, Archive } from 'lucide-react'
+import { Activity, Check, ChevronLeft, ChevronRight, FolderKanban, Home, Lightbulb, ListTodo, Pencil, Plus, Search, Sparkles, Trash2, Wallet, X, Zap, Archive } from 'lucide-react'
 
 type ResultMode = 'none'|'number'|'text'|'choice'|'money'
 type ResultEntry = {id:string;value:string;note:string;at:string;highlight?:boolean}
