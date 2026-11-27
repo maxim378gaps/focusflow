@@ -549,3 +549,33 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
  .ff-hero{grid-template-columns:minmax(0,1fr) 50px;column-gap:10px}
  .ff-hero-orb{width:50px;height:50px}
 }
+
+
+/* Mobile task form: prevent native date/time controls overflowing the modal */
+@media(max-width:640px){
+ .ff-modal .ff-form-grid{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  width:100%;gap:3px!important;
+ }
+ .ff-modal .ff-form-grid>div{
+  display:block;width:100%;max-width:100%;min-width:0;overflow:visible!important;
+ }
+ .ff-modal .ff-form-grid input[type="date"],
+ .ff-modal .ff-form-grid input[type="time"]{
+  display:block;width:100%!important;max-width:100%!important;min-width:0!important;
+  box-sizing:border-box!important;margin:0;font-size:16px!important;padding:11px 10px!important;
+ }
+ .ff-modal input:not([type="checkbox"]),
+ .ff-modal textarea,.ff-modal select{
+  display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+ }
+ .ff-modal .ff-toggle-field{
+  display:flex!important;flex-direction:row;align-items:center!important;
+  justify-content:flex-start;gap:10px;width:100%;min-height:44px;
+  line-height:1.35;margin:12px 0!important;padding:0;white-space:normal;
+ }
+ .ff-modal .ff-toggle-field input[type="checkbox"]{
+  display:block;flex:0 0 18px;width:18px!important;height:18px!important;
+  min-height:18px;margin:0!important;padding:0;align-self:center;
+ }
+}
