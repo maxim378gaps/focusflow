@@ -305,3 +305,21 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}
 .ff-habit-row .ff-icon-btn{flex-shrink:0}
 .ff-habit-card-foot span{line-height:1.45}
 .ff-habit-calendar span.due:not(.checked){background:#211c2b;color:#b5a8c8}
+
+/* Outcome-first task and day summary */
+.ff-day-summary{padding:18px 20px;border:1px solid var(--ff-line);border-radius:19px;background:linear-gradient(145deg,#191827,#13131e);box-shadow:0 12px 36px #0002}
+.ff-day-summary-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.ff-day-summary-head h2{font:800 21px Manrope;letter-spacing:-.6px;margin:6px 0 0;color:#fff}
+.ff-day-summary-caption{font-size:9px;color:#8f899e}
+.ff-day-results,.ff-day-habits{display:grid;gap:8px;margin-top:12px}
+.ff-day-results>strong,.ff-day-habits>strong{font-size:11px;color:#d9caff}
+.ff-day-result{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #ffffff0a;font-size:10px;color:#a49bb4}
+.ff-day-result b{font-size:11px;color:#f0e9ff;text-align:right}
+.ff-day-results>small,.ff-day-habits>small{font-size:10px;color:#8f899e}
+.ff-day-habits>span{font-size:10px;color:#c5b6df}
+.ff-day-progress{height:3px;margin-top:16px;border-radius:8px;background:#373044;overflow:hidden}
+.ff-day-progress span{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#8b68e4,#c3a5ff);transition:width .3s}
+.ff-task-type-badge{width:max-content!important;padding:3px 6px;border-radius:5px;font-size:8px!important;letter-spacing:.02em}
+.ff-task-type-badge.measurable{background:#302542;color:#d5c0ff!important}
+.ff-task-type-badge.simple{background:#22202b;color:#aaa2b5!important}
+@media(max-width:600px){.ff-day-summary{padding:15px}.ff-day-summary-head{align-items:flex-start}.ff-day-result{align-items:flex-start;flex-direction:column;gap:3px}.ff-day-result b{text-align:left}}
