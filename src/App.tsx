@@ -70,9 +70,7 @@ export default function App(){
  const todayTasks=tasks.filter(t=>t.date===today())
  const doneToday=todayTasks.filter(t=>t.done&&t.outcome!=='not_reached'&&t.outcome!=='cancelled').length
  const activeTodayCount=todayTasks.filter(t=>t.outcome!=='cancelled').length
- const totalProgressItems=activeTodayCount+dueHabits.length
- const completedProgressItems=doneToday+completedHabits.length
- const progress=totalProgressItems?Math.round(completedProgressItems/totalProgressItems*100):0
+
  const openTasks=tasks.filter(t=>!t.done).sort((a,b)=>a.date.localeCompare(b.date))
  const nextCandidates=[...openTasks].sort((a,b)=>{const rank=(t:Task)=>t.priority&&t.date<=addDays(today(),3)?0:t.date<=addDays(today(),2)?1:t.resultStatus==='partial'?2:3;return rank(a)-rank(b)||a.date.localeCompare(b.date)||String(a.lastResultAt??'').localeCompare(String(b.lastResultAt??''))})
  const nextTask=nextCandidates.length?nextCandidates[Math.min(nextIndex,nextCandidates.length-1)]:undefined
@@ -83,6 +81,9 @@ export default function App(){
  const filteredTasks=useMemo(()=>tasks.filter(t=>(t.title+' '+t.category+' '+t.note+' '+(t.resultValue??'')+' '+(projects.find(p=>p.id===t.projectId)?.name??'')).toLowerCase().includes(query.toLowerCase())),[tasks,query,projects])
  const dueHabits=habits.filter(h=>isDue(h,today()))
  const completedHabits=dueHabits.filter(h=>h.log.includes(today()))
+ const totalProgressItems=activeTodayCount+dueHabits.length
+ const completedProgressItems=doneToday+completedHabits.length
+ const progress=totalProgressItems?Math.round(completedProgressItems/totalProgressItems*100):0
   const weekResults=tasks.flatMap(t=>(t.resultHistory??[]).filter(r=>r.at.slice(0,10)>=addDays(today(),-(resultPeriod-1))).map(r=>({task:t.title,value:r.value,unit:t.unit??'',at:r.at,highlight:!!r.highlight}))).sort((a,b)=>b.at.localeCompare(a.at))
   const resultGroups=weekResults.reduce((groups,r)=>{const key=r.unit||'Без единицы · '+r.task;(groups[key]??=[]).push(r);return groups},{} as Record<string,typeof weekResults>)
  const days=Array.from({length:42},(_,i)=>{const first=calendarMonth+'-01';const offset=weekDay(first);return addDays(first,i-offset)})
