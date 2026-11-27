@@ -606,3 +606,11 @@ body{overflow-x:hidden;overscroll-behavior-x:none}
  .ff-calendar>span{padding:5px 0;font-size:8px}
  .ff-thought-list{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* Native-feeling page scrolling on touch devices */
+html{scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scroll-padding-top:12px}
+body{min-height:100%;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.ff-app{overscroll-behavior-y:contain;touch-action:pan-y}
+.ff-main{scroll-margin-top:12px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
