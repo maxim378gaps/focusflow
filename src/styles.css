@@ -658,3 +658,42 @@ body{min-height:100%;-webkit-overflow-scrolling:touch;touch-action:pan-y}
   padding:0;
  }
 }
+
+
+/* Final iPhone Telegram task-form containment */
+@media(max-width:640px){
+ .ff-modal .ff-form-grid,
+ .ff-modal .ff-form-grid>div{
+  display:block;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+ }
+ .ff-modal .ff-form-grid input[type="date"],
+ .ff-modal .ff-form-grid input[type="time"]{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  inline-size:100%!important;
+  box-sizing:border-box!important;
+  -webkit-appearance:none;
+  appearance:none;
+  padding-left:12px!important;
+  padding-right:12px!important;
+ }
+ .ff-modal .ff-task-type-select{
+  display:block;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  font-size:14px!important;
+  padding:11px 34px 11px 12px!important;
+  white-space:normal;
+  text-overflow:ellipsis;
+ }
+}
+@media(max-width:380px){
+ .ff-modal .ff-task-type-select{font-size:13px!important;padding-left:10px!important}
+}
